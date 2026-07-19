@@ -300,7 +300,7 @@ export default function WardrobePage() {
         <p className="text-xs text-ink-soft">先回去授权一次相册吧</p>
         <button
           type="button"
-          onClick={() => router.push("/")}
+          onClick={() => router.push("/baby")}
           className="px-5 py-2.5 rounded-full bg-macaron-pink text-white text-sm font-medium shadow"
         >
           去建衣橱
@@ -362,7 +362,7 @@ export default function WardrobePage() {
             type="button"
             onClick={() => {
               reset();
-              router.push("/");
+              router.push("/baby");
             }}
             className="text-[10px] text-ink-soft underline underline-offset-2 shrink-0"
           >

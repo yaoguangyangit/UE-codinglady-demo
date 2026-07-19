@@ -26,7 +26,7 @@ function ProcessingInner() {
 
   // 没有待处理照片（比如直接访问）→ 回授权页
   useEffect(() => {
-    if (ready && total === 0) router.replace("/");
+    if (ready && total === 0) router.replace("/baby");
   }, [ready, total, router]);
 
   // 处理管线：默认直接产出固化结果；?live=1 时实时调用 /api/decompose → /api/analyze
@@ -115,7 +115,7 @@ function ProcessingInner() {
           </button>
           <button
             type="button"
-            onClick={() => router.push("/")}
+            onClick={() => router.push("/baby")}
             className="px-5 py-2.5 rounded-full bg-card text-ink text-sm border border-[#f4e7d2]"
           >
             返回首页

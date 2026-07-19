@@ -1,259 +1,99 @@
-"use client";
+import Link from "next/link";
 
-import { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useStore, monthsSince, type BabyProfile } from "@/lib/store";
-import { PRESET_DEMO_IMAGES, PRESET_DEMO_TAKEN_ATS } from "@/lib/preset";
+const MODULES = [
+  {
+    href: "/resale",
+    icon: "📱",
+    title: "旧物转卖",
+    desc: "拍 SN 码，AI 生成转卖帖",
+  },
+  {
+    href: "/furniture",
+    icon: "🗄️",
+    title: "家具家电",
+    desc: "拍照测距，预演新家",
+  },
+  {
+    href: "/mementos",
+    icon: "🖼️",
+    title: "纪念品",
+    desc: "心爱之物，各有其位",
+  },
+  {
+    href: "/memories",
+    icon: "🎙️",
+    title: "念想物件",
+    desc: "口述 30 秒，物件立小传",
+  },
+  {
+    href: "/valuables",
+    icon: "💎",
+    title: "贵重物",
+    desc: "拍照建档，收纳有据",
+  },
+];
 
-const MAX_PHOTOS = 20;
-
-/** 读取文件为 base64，并压到最长边 maxSize 的 JPEG（省存储、省上传） */
-async function fileToDataUrl(file: File, maxSize = 900): Promise<string> {
-  const raw = await new Promise<string>((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => resolve(r.result as string);
-    r.onerror = () => reject(new Error("读取文件失败"));
-    r.readAsDataURL(file);
-  });
-  try {
-    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-      const i = new Image();
-      i.onload = () => resolve(i);
-      i.onerror = () => reject(new Error("图片解析失败"));
-      i.src = raw;
-    });
-    const scale = Math.min(1, maxSize / Math.max(img.width, img.height, 1));
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.max(1, Math.round(img.width * scale));
-    canvas.height = Math.max(1, Math.round(img.height * scale));
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return raw;
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    return canvas.toDataURL("image/jpeg", 0.82);
-  } catch {
-    return raw;
-  }
-}
-
-function toYMD(ms: number): string {
-  const d = new Date(ms);
-  const m = `${d.getMonth() + 1}`.padStart(2, "0");
-  const day = `${d.getDate()}`.padStart(2, "0");
-  return `${d.getFullYear()}-${m}-${day}`;
-}
-
-// ---------- 第一屏：宝宝档案（头像 / 昵称 / 生日） ----------
-function ProfileForm({ onDone }: { onDone: (p: BabyProfile) => void }) {
-  const [nickname, setNickname] = useState("");
-  const [birthday, setBirthday] = useState("");
-  const [avatar, setAvatar] = useState("");
-  const avatarRef = useRef<HTMLInputElement>(null);
-  const today = new Date().toISOString().slice(0, 10);
-  const valid = nickname.trim().length > 0 && birthday.length > 0 && avatar.length > 0;
-
-  async function handleAvatar(list: FileList | null) {
-    const f = list?.[0];
-    if (!f || !f.type.startsWith("image/")) return;
-    setAvatar(await fileToDataUrl(f, 300));
-  }
-
-  return (
-    <div className="space-y-6 animate-float-up">
-      <section className="pt-6 text-center">
-        <h1 className="font-display text-2xl text-ink">先认识一下宝宝 👋</h1>
-        <p className="text-sm text-ink-soft mt-2">一次设置，之后打开就是 TA 的衣橱</p>
-      </section>
-
-      {/* 头像：用于在多孩照片中认出宝宝 */}
-      <section className="flex flex-col items-center gap-2">
-        <button
-          type="button"
-          onClick={() => avatarRef.current?.click()}
-          className="w-28 h-28 rounded-full overflow-hidden bg-gradient-to-br from-macaron-pink-soft to-macaron-blue-soft border-2 border-white shadow flex items-center justify-center text-5xl active:scale-95 transition"
-        >
-          {avatar ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={avatar} alt="宝宝头像" className="w-full h-full object-cover" />
-          ) : (
-            "👶"
-          )}
-        </button>
-        <p className="text-xs text-ink-soft">
-          {avatar ? "点击更换" : "上传宝宝正脸照"}
-        </p>
-        <p className="text-[10px] text-ink-soft/70">用于在多孩照片中认出 TA</p>
-        <input
-          ref={avatarRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={(e) => handleAvatar(e.target.files)}
-        />
-      </section>
-
-      <section className="card-dream rounded-3xl p-5 space-y-4">
-        <div>
-          <label className="text-sm font-medium text-ink" htmlFor="nickname">
-            宝宝的小名
-          </label>
-          <input
-            id="nickname"
-            type="text"
-            value={nickname}
-            onChange={(e) => setNickname(e.target.value)}
-            maxLength={12}
-            placeholder="比如：小笼包"
-            className="mt-2 w-full rounded-2xl bg-white/80 border border-[#f4e7d2] px-4 py-3 text-sm text-ink outline-none focus:border-macaron-pink"
-          />
-        </div>
-        <div>
-          <label className="text-sm font-medium text-ink" htmlFor="birthday">
-            宝宝生日
-          </label>
-          <input
-            id="birthday"
-            type="date"
-            value={birthday}
-            max={today}
-            onChange={(e) => setBirthday(e.target.value)}
-            className="mt-2 w-full rounded-2xl bg-white/80 border border-[#f4e7d2] px-4 py-3 text-sm text-ink outline-none focus:border-macaron-pink"
-          />
-          <p className="text-[10px] text-ink-soft/70 mt-1.5">
-            月龄、尺码、成长节点都由生日自动推算，不用手填
-          </p>
-        </div>
-      </section>
-
-      <button
-        type="button"
-        disabled={!valid}
-        onClick={() => onDone({ nickname: nickname.trim(), birthday, avatar })}
-        className="w-full py-4 rounded-full bg-macaron-pink text-white font-medium shadow-lg disabled:opacity-40 active:scale-[0.98] transition"
-      >
-        开始建衣橱 →
-      </button>
-    </div>
-  );
-}
-
-// ---------- 第二屏：相册授权（核心入口） ----------
 export default function Home() {
-  const router = useRouter();
-  const { startScan, ready, profile, setProfile, reset } = useStore();
-  const [reading, setReading] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
-
-  if (!ready) {
-    return <div className="py-20 text-center text-ink-soft">加载中…</div>;
-  }
-  if (!profile) {
-    return <ProfileForm onDone={setProfile} />;
-  }
-
-  const monthAge = monthsSince(profile.birthday);
-
-  async function handleFiles(list: FileList | null) {
-    if (!list || list.length === 0) return;
-    setReading(true);
-    try {
-      const files = Array.from(list)
-        .filter((f) => f.type.startsWith("image/"))
-        .slice(0, MAX_PHOTOS);
-      const images: string[] = [];
-      const takenAts: string[] = [];
-      for (const f of files) {
-        images.push(await fileToDataUrl(f));
-        takenAts.push(toYMD(f.lastModified));
-      }
-      if (!images.length) return;
-      startScan(monthAge, images, takenAts);
-      router.push("/processing");
-    } finally {
-      setReading(false);
-      if (fileRef.current) fileRef.current.value = "";
-    }
-  }
-
-  function handleDemo() {
-    // 演示数据与相册授权共用同一份预处理结果（20 张真实照片的完整 AI 分析）
-    startScan(40, PRESET_DEMO_IMAGES, PRESET_DEMO_TAKEN_ATS);
-    router.push("/processing");
-  }
-
   return (
-    <div className="space-y-6 animate-float-up">
-      {/* 宝宝信息条 */}
-      <section className="card-dream rounded-3xl p-4 flex items-center gap-3">
-        <div className="w-14 h-14 rounded-full overflow-hidden bg-gradient-to-br from-macaron-pink-soft to-macaron-blue-soft border border-white shadow-inner shrink-0">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={profile.avatar} alt="宝宝头像" className="w-full h-full object-cover" />
+    <div className="space-y-5 animate-float-up">
+      {/* 品牌区 */}
+      <section className="pt-4 text-center">
+        <div className="mx-auto w-20 h-20 rounded-3xl bg-gradient-to-br from-macaron-pink-soft to-macaron-blue-soft border border-white flex items-center justify-center text-4xl shadow-inner">
+          📦
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="font-display text-lg text-ink truncate">{profile.nickname}</p>
-          <p className="text-xs text-ink-soft mt-0.5">
-            {monthAge} 个月 · 生日 {profile.birthday}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={reset}
-          className="text-[10px] text-ink-soft underline underline-offset-2 shrink-0"
-        >
-          重新设置
-        </button>
-      </section>
-
-      {/* 核心入口：相册授权 */}
-      <section className="pt-2 text-center">
-        <p className="text-sm text-ink-soft leading-relaxed px-2">
-          {profile.nickname}的每一件衣服，都早已在你的相册里。
+        <p className="text-sm text-ink-soft mt-3 leading-relaxed px-4">
+          拖延症克星：AI 管家帮你把全屋物品理清楚
         </p>
       </section>
-      <button
-        type="button"
-        disabled={reading}
-        onClick={() => fileRef.current?.click()}
-        className="w-full rounded-3xl p-6 text-left bg-gradient-to-br from-macaron-pink to-macaron-pink-deep text-white shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-transform disabled:opacity-60"
+
+      {/* 主模块：宝宝衣橱（可体验 Demo） */}
+      <Link
+        href="/baby"
+        className="block w-full rounded-3xl p-6 bg-gradient-to-br from-macaron-pink to-macaron-pink-deep text-white shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-transform"
       >
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center text-3xl">
-            {reading ? "⏳" : "📷"}
+            🍼
           </div>
           <div className="flex-1">
-            <p className="font-display text-xl">
-              {reading ? "正在读取照片…" : "相册授权"}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="font-display text-xl">宝宝衣橱</p>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/25">
+                主 Demo · 可体验
+              </span>
+            </div>
             <p className="text-xs text-white/85 mt-1 leading-relaxed">
-              选择宝宝照片（每次最多 {MAX_PHOTOS} 张），AI 会分析后生成衣物卡片
+              相册授权，AI 自动建成宝宝衣橱：常穿/闲置/快穿不下，和每一份"第一次穿"
             </p>
           </div>
           <span className="text-2xl text-white/90">›</span>
         </div>
-      </button>
-      <input
-        ref={fileRef}
-        type="file"
-        multiple
-        accept="image/*"
-        className="hidden"
-        onChange={(e) => handleFiles(e.target.files)}
-      />
+      </Link>
 
-      {/* 兜底入口：演示数据（保留，弱化呈现） */}
-      <p className="text-center pt-1">
-        <button
-          type="button"
-          onClick={handleDemo}
-          className="text-xs text-macaron-blue-deep underline underline-offset-4"
-        >
-          没有宝宝照片？先用演示数据看看 →
-        </button>
-      </p>
+      {/* 规划中模块 */}
+      <section className="grid grid-cols-2 gap-3">
+        {MODULES.map((m) => (
+          <Link
+            key={m.href}
+            href={m.href}
+            className="card-dream rounded-3xl p-4 hover:scale-[1.02] active:scale-[0.98] transition-transform"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-2xl">{m.icon}</span>
+              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-butter-soft text-[#b08a2e]">
+                Coming 2026
+              </span>
+            </div>
+            <p className="font-medium text-ink text-sm mt-2">{m.title}</p>
+            <p className="text-[11px] text-ink-soft mt-0.5 leading-snug">{m.desc}</p>
+          </Link>
+        ))}
+      </section>
 
-      <p className="text-center text-[11px] text-ink-soft/70 leading-relaxed pt-2">
-        照片仅在本机处理，不会上传真实相册；
+      <p className="text-center text-[11px] text-ink-soft/70 leading-relaxed pt-1">
+        同一个"从照片长出物品档案"的引擎——
         <br />
-        零次手动录入，衣橱自己长出来。
+        宝宝衣橱是第一步，人生物品流转最快的三年在这里。
       </p>
     </div>
   );
