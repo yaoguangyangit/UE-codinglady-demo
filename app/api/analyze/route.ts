@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
     const monthAgeRaw = Number(body?.monthAge);
     const input: AnalyzeInput = {
       monthAge:
-        Number.isFinite(monthAgeRaw) && monthAgeRaw >= 0 && monthAgeRaw <= 36
+        Number.isFinite(monthAgeRaw) && monthAgeRaw >= 0 && monthAgeRaw <= 48
           ? monthAgeRaw
           : 9,
       items: Array.isArray(body?.items) ? body.items : [],

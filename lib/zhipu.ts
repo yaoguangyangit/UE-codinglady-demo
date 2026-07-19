@@ -29,13 +29,14 @@ interface ChatMessage {
 async function chat(
   messages: ChatMessage[],
   model: string,
-  jsonMode = false
+  jsonMode = false,
+  temperature = 0.8
 ): Promise<string> {
   const apiKey = process.env.ZHIPU_API_KEY!;
   const body: Record<string, unknown> = {
     model,
     messages,
-    temperature: 0.8,
+    temperature,
     top_p: 0.9,
   };
   if (jsonMode) {
@@ -226,12 +227,16 @@ async function generateAllStories(
 
   const prompt = `你是宝宝衣橱的温柔记录者。宝宝当前月龄：${input.monthAge} 个月。
 请为每件衣物写一句"它的故事"：20-40 字，感性但具体，像"2026年夏至，和爸爸妈妈一起在西湖穿的。"——有时间、有场景、有纪念意义，避免空洞煽情。
-规则：地点/人物来自照片元数据，没有就不提，严禁编造具体地名；命中成长节点（满月/百天/半岁/周岁）要强调；兜底款写出高出镜率的日常感；只穿过 1 次的，用"还没来得及出门"的口吻。
+铁律（必须严格遵守，违反即作废）：
+- 只允许使用"衣物事实"中给出的信息：日期、月龄、成长节点、节日节气、穿着次数、衣物的颜色/图案/品类
+- "照片地点/照片人物"字段缺失时，严禁提及任何地点（如公园、幼儿园、商场、西湖）与任何人物（如爷爷、奶奶、爸爸、妈妈、小朋友）
+- 严禁编造任何事件与动作（如"第一次系鞋带""第一次站立""春游"）
+- 没有地点人物时，聚焦时间与频率本身：命中成长节点（满月/百天/半岁/周岁）要强调；兜底款写高出镜率的日常感（如"春天出镜最多的兜底款"）；只穿过 1 次的，用"还没来得及出门"的口吻。
 衣物事实：${JSON.stringify(factsPayload)}
 只返回 JSON（不要多余文字）：{"stories": [{"item": "衣物名称", "story": "..."}]}`;
 
   try {
-    const raw = await chat([{ role: "user", content: prompt }], TEXT_MODEL, true);
+    const raw = await chat([{ role: "user", content: prompt }], TEXT_MODEL, true, 0.4);
     const r = extractJSON<{ stories?: { item?: string; story?: string }[] }>(raw);
     const out = { ...fallback };
     for (const s of r.stories || []) {
@@ -262,11 +267,12 @@ export async function generateStory(
   ].join("");
 
   const prompt = `这件${item.color}${item.pattern}${item.type}（${item.name}），陪伴宝宝从${item.first_worn_at}到${item.last_worn_at}，共出现${item.wear_count}次。${meta}
-请为它写一句"它的故事"：20-40 字，感性但具体，有时间、有场景、有纪念意义，避免空洞煽情。地点人物没有就不提，严禁编造。
+请为它写一句"它的故事"：20-40 字，感性但具体，有纪念意义，避免空洞煽情。
+铁律：只能使用上面给出的信息（日期、穿着次数、成长节点、节日节气、地点、人物）；未提供地点/人物时严禁提及任何地点与人物，严禁编造事件与动作；没有地点人物时聚焦时间意义与穿着频率。
 只返回这句话本身，不要引号，不要多余文字。`;
 
   try {
-    const raw = await chat([{ role: "user", content: prompt }], TEXT_MODEL);
+    const raw = await chat([{ role: "user", content: prompt }], TEXT_MODEL, false, 0.4);
     const story = raw.trim().replace(/^[“"']|[”"']$/g, "").split("\n")[0].trim();
     return story || mockStory(item, facts);
   } catch {

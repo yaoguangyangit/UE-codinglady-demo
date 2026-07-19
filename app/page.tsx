@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { DEMO_IMAGES, DEMO_TAKEN_ATS, DEMO_PLACES, DEMO_PEOPLES } from "@/lib/demo";
 
-const MAX_PHOTOS = 15;
+const MAX_PHOTOS = 20;
 
 /** 读取文件为 base64，并压到最长边 900px 的 JPEG（省存储、省上传） */
 async function fileToDataUrl(file: File): Promise<string> {
@@ -115,7 +115,7 @@ export default function Home() {
           <button
             type="button"
             aria-label="增加月龄"
-            onClick={() => setMonthAge((m) => Math.min(36, m + 1))}
+            onClick={() => setMonthAge((m) => Math.min(48, m + 1))}
             className="w-9 h-9 rounded-full bg-macaron-blue-soft text-macaron-blue-deep text-lg font-bold active:scale-95 transition"
           >
             ＋
@@ -124,15 +124,15 @@ export default function Home() {
         <input
           type="range"
           min={0}
-          max={36}
+          max={48}
           value={monthAge}
           onChange={(e) => setMonthAge(Number(e.target.value))}
           className="w-full mt-4 accent-[#f08bb0]"
-          aria-label="宝宝月龄（0-36 个月）"
+          aria-label="宝宝月龄（0-48 个月）"
         />
         <div className="flex justify-between text-[10px] text-ink-soft/70">
           <span>0 个月</span>
-          <span>36 个月</span>
+          <span>48 个月</span>
         </div>
       </section>
 

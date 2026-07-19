@@ -37,6 +37,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# 真实宝宝照片（隐私红线：不进仓库）
+/demo image/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

@@ -17,9 +17,58 @@ function norm(s: string): string {
   return (s || "").trim().replace(/\s+/g, "");
 }
 
+/**
+ * GLM 自由输出的同义词归组——只用于归并指纹，展示字段保留原值。
+ * 原则"宁可分裂、不可误并"：颜色不做深浅合并，只做同义词对齐。
+ * 对规范词表（连体衣/条纹/蓝白等 mock 输出）恒等，不影响 mock 兜底链路。
+ */
+const TYPE_SYNONYMS: [RegExp, string][] = [
+  [/连衣裙|裙子|纱裙|公主裙|礼服裙|背带裙|芭蕾/, "连衣裙"],
+  [/连体衣|连身衣|爬服/, "连体衣"],
+  [/包屁衣|三角哈衣/, "包屁衣"],
+  [/哈衣/, "哈衣"],
+  [/T恤|短袖|长袖|衬衫|衬衣|卫衣|背心|吊带|上衣|polo/i, "上衣"],
+  [/长裤|短裤|打底裤|牛仔裤|运动裤|阔腿裤|裤/, "裤子"],
+  [/外套|开衫|夹克|风衣|羽绒服|马甲|大衣/, "外套"],
+  [/帽/, "帽子"],
+  [/袜/, "袜子"],
+  [/鞋/, "鞋子"],
+  [/背包|书包|发饰|围巾|手套|配饰/, "配饰"],
+];
+
+const PATTERN_SYNONYMS: [RegExp, string][] = [
+  [/卡通|动画|动漫/, "卡通"],
+  [/条纹|横纹|竖纹/, "条纹"],
+  [/波点|圆点|点点/, "波点"],
+  [/格纹|格子|棋盘/, "格纹"],
+  [/刺绣|绣花/, "刺绣"],
+  [/花卉|花朵|碎花|印花|图案|涂鸦|字母|数字|植物|水果/i, "印花"],
+  [/纯色|净色|素色|无图案|单色|简约/, "纯色"],
+];
+
+function normGroup(s: string, table: [RegExp, string][]): string {
+  const v = norm(s);
+  for (const [re, target] of table) if (re.test(v)) return target;
+  return v;
+}
+
+function normType(s: string): string {
+  return normGroup(s, TYPE_SYNONYMS);
+}
+
+function normPattern(s: string): string {
+  return normGroup(s, PATTERN_SYNONYMS);
+}
+
+/** 颜色归一：去"色"后缀，复合色取第一主色（"粉色和白色"→"粉"） */
+function normColor(s: string): string {
+  const v = norm(s).replace(/色$/, "");
+  return v.split(/[和与、/·+\s]/)[0] || v;
+}
+
 /** 归并指纹 */
 export function fingerprint(type: string, color: string, pattern: string): string {
-  return `${norm(type)}|${norm(color)}|${norm(pattern)}`;
+  return `${normType(type)}|${normColor(color)}|${normPattern(pattern)}`;
 }
 
 /** 月龄（月）→ 标准尺码阶段（就近取档） */
@@ -86,8 +135,8 @@ export function mergeWardrobe(
         const size = sizeForMonths(Math.max(0, ageMonths));
         it = {
           id: `item-${items.length + 1}`,
-          name: `${norm(d.color)}${norm(d.pattern)}${norm(d.type)}`,
-          type: norm(d.type),
+          name: `${norm(d.color)}${norm(d.pattern)}${normType(d.type)}`,
+          type: normType(d.type), // 展示也用归组值，避免"连体衣/哈衣/上衣"这类原样照抄
           color: norm(d.color),
           pattern: norm(d.pattern),
           size_stage: size,

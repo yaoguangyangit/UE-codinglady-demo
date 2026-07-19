@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     const peoples: unknown[] = Array.isArray(body?.peoples) ? body.peoples : [];
     const monthAgeRaw = Number(body?.monthAge);
     const monthAge =
-      Number.isFinite(monthAgeRaw) && monthAgeRaw >= 0 && monthAgeRaw <= 36
+      Number.isFinite(monthAgeRaw) && monthAgeRaw >= 0 && monthAgeRaw <= 48
         ? monthAgeRaw
         : 9;
 
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "缺少照片数据" }, { status: 400 });
     }
 
-    const limited = images.slice(0, 15);
+    const limited = images.slice(0, 20);
     const total = limited.length;
     const scanned: ScannedPhoto[] = [];
 
