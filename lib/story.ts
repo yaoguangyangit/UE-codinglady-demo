@@ -27,6 +27,16 @@ function diffDays(a: string, b: string): number {
   return Math.abs(toDate(a).getTime() - toDate(b).getTime()) / DAY_MS;
 }
 
+/** 忽略年份的"月-日"环形差（天，±7 天容差内判定临近生日） */
+function mdDiffDays(a: string, bMD: string): number {
+  const [am, ad] = a.slice(5).split("-").map(Number);
+  const [bm, bd] = bMD.split("-").map(Number);
+  const da = (am - 1) * 31 + ad;
+  const db = (bm - 1) * 31 + bd;
+  const diff = Math.abs(da - db);
+  return Math.min(diff, 372 - diff);
+}
+
 /** 日期 → 节日/节气（±1 天），无则 null */
 export function specialDayOf(date: string): string | null {
   for (const s of SPECIAL_DAYS) {
@@ -63,6 +73,7 @@ export interface StoryFacts {
   node_date: string | null;
   best_date: string; // 最有纪念意义的一张照片日期
   best_festival: string | null; // 该照片命中的节日/节气
+  near_birthday: string | null; // 穿着日临近宝宝生日（±7 天）——"像是为这个日子准备的"
   place: string | null; // 元数据地点（可空）
   people: string | null; // 元数据人物（可空）
 }
@@ -92,9 +103,15 @@ export function buildStoryFacts(
     }
   }
 
+  // 穿着日是否临近宝宝生日（±7 天）：生日礼物/纪念日准备的线索
+  const birthdayMD = birthISO.slice(5);
+  const near_birthday =
+    worn.find((p) => mdDiffDays(p.taken_at, birthdayMD) <= 7)?.taken_at ?? null;
+
   const scored = worn.map((p) => {
     let s = 0;
     if (nodeDate === p.taken_at) s += 8;
+    if (near_birthday === p.taken_at) s += 6;
     if (specialDayOf(p.taken_at)) s += 4;
     if (p.place) s += 2;
     if (p.people) s += 1;
@@ -117,6 +134,7 @@ export function buildStoryFacts(
     node_date: nodeDate,
     best_date: best?.taken_at ?? item.last_worn_at,
     best_festival: best ? specialDayOf(best.taken_at) : null,
+    near_birthday,
     place: best?.place ?? null,
     people: best?.people ?? null,
   };

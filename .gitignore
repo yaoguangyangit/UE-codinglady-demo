@@ -43,3 +43,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# kimi-code 调试导出（不进仓库）
+kimi-debug-*.zip

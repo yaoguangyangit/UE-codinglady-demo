@@ -220,6 +220,7 @@ async function generateAllStories(
     命中成长节点: f.node,
     纪念照片日期: f.best_date,
     命中节日节气: f.best_festival,
+    临近宝宝生日: f.near_birthday,
     照片地点: f.place,
     照片人物: f.people,
     是否兜底款: f.is_staple,
@@ -231,6 +232,7 @@ async function generateAllStories(
 - 只允许使用"衣物事实"中给出的信息：日期、月龄、成长节点、节日节气、穿着次数、衣物的颜色/图案/品类
 - "照片地点/照片人物"字段缺失时，严禁提及任何地点（如公园、幼儿园、商场、西湖）与任何人物（如爷爷、奶奶、爸爸、妈妈、小朋友）
 - 严禁编造任何事件与动作（如"第一次系鞋带""第一次站立""春游"）
+- "临近宝宝生日"有值时，用生日礼物/纪念日准备的口吻（如"生日前一周专门穿上的"），点出"像是专门为这个日子准备的"心意
 - 没有地点人物时，聚焦时间与频率本身：命中成长节点（满月/百天/半岁/周岁）要强调；兜底款写高出镜率的日常感（如"春天出镜最多的兜底款"）；只穿过 1 次的，用"还没来得及出门"的口吻。
 衣物事实：${JSON.stringify(factsPayload)}
 只返回 JSON（不要多余文字）：{"stories": [{"item": "衣物名称", "story": "..."}]}`;
@@ -262,6 +264,7 @@ export async function generateStory(
   const meta = [
     facts?.node ? `其中 ${facts.node_date} 命中${facts.node}。` : "",
     facts?.best_festival ? `拍摄当天是${facts.best_festival}。` : "",
+    facts?.near_birthday ? `${facts.near_birthday} 临近宝宝生日。` : "",
     facts?.place ? `拍摄地点：${facts.place}。` : "",
     facts?.people ? `同行人物：${facts.people}。` : "",
   ].join("");
@@ -370,6 +373,9 @@ function mockStory(item: ClothingItem, facts?: StoryFacts): string {
   // 模板兜底：只用 facts 里真实存在的地点/人物/节点，绝不编造
   if (facts?.place) {
     return `${facts.best_date}${facts.best_festival ?? ""}，和${facts.people ?? "家人"}在${facts.place}穿的。`;
+  }
+  if (facts?.near_birthday) {
+    return `生日快到的那几天穿上它，像是专门为这个日子准备的。`;
   }
   if (facts?.node) {
     return `${facts.node}那天穿上它，留下了值得记住的一张照片。`;
