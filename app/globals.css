@@ -1,0 +1,158 @@
+@import "tailwindcss";
+
+:root {
+  --cream: #fff9f0;
+  --cream-deep: #faf0dd;
+  --ink: #6b5a4e;
+  --ink-soft: #a68f7d;
+  --pink: #f7a8c4;
+  --pink-deep: #f08bb0;
+  --pink-soft: #fce7f0;
+  --blue: #8fc4ea;
+  --blue-deep: #6aa9dc;
+  --blue-soft: #e7f2fb;
+  --butter: #f6d97b;
+  --butter-soft: #fcf3d7;
+  --mint: #a8dcc0;
+  --mint-soft: #e7f6ee;
+  --card: #fffdf8;
+}
+
+@theme inline {
+  --color-cream: var(--cream);
+  --color-cream-deep: var(--cream-deep);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-macaron-pink: var(--pink);
+  --color-macaron-pink-deep: var(--pink-deep);
+  --color-macaron-pink-soft: var(--pink-soft);
+  --color-macaron-blue: var(--blue);
+  --color-macaron-blue-deep: var(--blue-deep);
+  --color-macaron-blue-soft: var(--blue-soft);
+  --color-butter: var(--butter);
+  --color-butter-soft: var(--butter-soft);
+  --color-mint: var(--mint);
+  --color-mint-soft: var(--mint-soft);
+  --color-card: var(--card);
+}
+
+html,
+body {
+  background: var(--cream);
+  color: var(--ink);
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 奶油底 + 马卡龙光晕 */
+.bg-cream-grad {
+  background:
+    radial-gradient(1200px 520px at 85% -10%, #fce7f0 0%, transparent 55%),
+    radial-gradient(1000px 480px at -5% 0%, #e7f2fb 0%, transparent 50%),
+    linear-gradient(165deg, #fff9f0 0%, #fbf1df 100%);
+}
+
+.font-display {
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+/* 手帐卡片 */
+.card-dream {
+  background: var(--card);
+  border: 1px solid #f4e7d2;
+  box-shadow: 0 10px 30px -14px rgba(196, 158, 110, 0.35);
+}
+
+/* 动画 */
+@keyframes float-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-float-up {
+  animation: float-up 0.5s ease-out both;
+}
+
+@keyframes pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  70% {
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.animate-pop-in {
+  animation: pop-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
+.animate-pulse-soft {
+  animation: pulse-soft 1.8s ease-in-out infinite;
+}
+
+@keyframes dot-bounce {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  40% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+.dot-bounce {
+  animation: dot-bounce 1.2s infinite ease-in-out;
+}
+.dot-bounce:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.dot-bounce:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.shimmer {
+  background: linear-gradient(90deg, #f7ebd6 0px, #fdf6e9 200px, #f7ebd6 400px);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+@keyframes shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: #e9d5b8;
+  border-radius: 999px;
+}
