@@ -1,8 +1,10 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
+import { wardrobeStats, type StatChip } from "@/lib/stats";
 import type { ClothingItem, ClothingStatus, PhotoItem } from "@/lib/types";
 
 type Tab = "closet" | "timeline" | "reminders";
@@ -27,6 +29,39 @@ function shortDate(s: string): string {
   return parts.length === 3 ? `${Number(parts[1])}/${Number(parts[2])}` : s;
 }
 
+/** GLM 推演的 current_size 可能是长文，徽章只取尺码数字 */
+function sizeNumber(currentSize: string): string {
+  return currentSize.match(/\d+/)?.[0] || currentSize;
+}
+
+// ---------- 统计行（季节/尺码/类型；0 件标"可增补"） ----------
+function StatRow({ title, chips }: { title: string; chips: StatChip[] }) {
+  return (
+    <div className="flex items-start gap-2">
+      <span className="w-9 shrink-0 pt-1 text-[10px] text-ink-soft">{title}</span>
+      <div className="flex flex-wrap gap-1.5">
+        {chips.map((c) =>
+          c.count > 0 ? (
+            <span
+              key={c.label}
+              className="text-[10px] px-2 py-0.5 rounded-full bg-macaron-blue-soft text-macaron-blue-deep"
+            >
+              {c.label} ×{c.count}
+            </span>
+          ) : (
+            <span
+              key={c.label}
+              className="text-[10px] px-2 py-0.5 rounded-full border border-dashed border-[#e0cfae] text-ink-soft/70"
+            >
+              {c.label} · 可增补
+            </span>
+          )
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ---------- 衣物详情弹层 ----------
 function ItemModal({
   item,
@@ -45,6 +80,16 @@ function ItemModal({
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // 弹层打开期间锁定背景滚动
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
+
   const wornPhotos = photos
     .filter((p) => p.item_ids.includes(item.id))
     .sort((a, b) => a.taken_at.localeCompare(b.taken_at));
@@ -83,7 +128,9 @@ function ItemModal({
     setEditing(false);
   }
 
-  return (
+  // portal 到 body：脱离任何带 transform 的祖先（否则 fixed 会相对祖先定位，弹层"跑出视口"）
+  if (typeof document === "undefined") return null;
+  return createPortal(
     <div
       className="fixed inset-0 z-50 bg-[#6b5a4e]/40 backdrop-blur-sm flex items-end sm:items-center justify-center"
       onClick={onClose}
@@ -216,14 +263,15 @@ function ItemModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
 // ---------- 结果页 ----------
 export default function WardrobePage() {
   const router = useRouter();
-  const { ready, result, monthAge, setItemStory, reset } = useStore();
+  const { ready, result, monthAge, profile, setItemStory, reset } = useStore();
   const [tab, setTab] = useState<Tab>("closet");
   const [selected, setSelected] = useState<ClothingItem | null>(null);
 
@@ -253,6 +301,8 @@ export default function WardrobePage() {
   const itemOf = (id: string | null) => items.find((it) => it.id === id);
   const milestoneOn = (date: string) => milestones.filter((m) => m.date === date);
   const timelinePhotos = [...photos].sort((a, b) => b.taken_at.localeCompare(a.taken_at));
+  const stats = wardrobeStats(items, photos, monthAge);
+  const aiSizeNote = currentSize.length > 4 ? currentSize : ""; // GLM 长文尺码解读，挪到提醒 Tab
 
   const TABS: { key: Tab; label: string; icon: string }[] = [
     { key: "closet", label: "衣橱总览", icon: "🧺" },
@@ -262,32 +312,57 @@ export default function WardrobePage() {
 
   return (
     <div className="space-y-4 animate-float-up">
-      {/* 概要头 */}
-      <section className="card-dream rounded-3xl p-4 flex items-center gap-3">
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-macaron-pink to-macaron-blue flex items-center justify-center text-xl text-white">
-          👶
+      {/* 概要头：宝宝 + 月龄尺码 + 收录统计 */}
+      <section className="card-dream rounded-3xl p-4">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-2xl overflow-hidden bg-gradient-to-br from-macaron-pink to-macaron-blue flex items-center justify-center text-xl text-white shrink-0">
+            {profile?.avatar ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={profile.avatar}
+                alt={profile.nickname}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              "👶"
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm text-ink">
+              <span className="font-display">{profile?.nickname || "宝宝"}</span>{" "}
+              <span className="font-display">{monthAge}</span> 个月 · 当前尺码{" "}
+              <span
+                className={`text-[11px] px-2 py-0.5 rounded-full ${sizeBadgeCls(sizeNumber(currentSize))}`}
+              >
+                {sizeNumber(currentSize)} 码
+              </span>
+            </p>
+            <p className="text-[11px] text-ink-soft mt-0.5">
+              从 {photos.length} 张照片里长出 {items.length} 件衣物 · 零次手动录入
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              reset();
+              router.push("/");
+            }}
+            className="text-[10px] text-ink-soft underline underline-offset-2 shrink-0"
+          >
+            重扫
+          </button>
         </div>
-        <div className="flex-1">
-          <p className="text-sm text-ink">
-            宝宝 <span className="font-display">{monthAge}</span> 个月 · 当前尺码{" "}
-            <span className={`text-[11px] px-2 py-0.5 rounded-full ${sizeBadgeCls(currentSize)}`}>
-              {currentSize} 码
-            </span>
-          </p>
-          <p className="text-[11px] text-ink-soft mt-0.5">
-            从 {photos.length} 张照片里长出 {items.length} 件衣物 · 零次手动录入
-          </p>
+        {/* 收录统计：一眼看出哪类需要增补或汰换 */}
+        <div className="mt-3 pt-3 border-t border-[#f7ecd9] space-y-1.5">
+          <StatRow title="季节" chips={stats.seasons} />
+          <StatRow title="尺码" chips={stats.sizes} />
+          <StatRow title={monthAge <= 12 ? "分类" : "类型"} chips={stats.types} />
+          {stats.retiredCount > 0 && (
+            <p className="text-[10px] text-ink-soft/80 pt-1">
+              🧺 {stats.retiredCount} 件已退役的衣物，可以洗净收进纪念箱啦
+            </p>
+          )}
         </div>
-        <button
-          type="button"
-          onClick={() => {
-            reset();
-            router.push("/");
-          }}
-          className="text-[10px] text-ink-soft underline underline-offset-2"
-        >
-          重扫
-        </button>
       </section>
 
       {/* Tab 切换 */}
@@ -413,6 +488,12 @@ export default function WardrobePage() {
       {/* ③ 提醒 */}
       {tab === "reminders" && (
         <section className="space-y-4">
+          {aiSizeNote && (
+            <div className="card-dream rounded-3xl p-4">
+              <p className="text-sm font-medium text-ink mb-1.5">🤖 AI 尺码解读</p>
+              <p className="text-xs text-ink leading-relaxed">{aiSizeNote}</p>
+            </div>
+          )}
           <div className="card-dream rounded-3xl p-4">
             <p className="text-sm font-medium text-ink mb-2">🌱 尺码预警</p>
             {sizeAlerts.length ? (

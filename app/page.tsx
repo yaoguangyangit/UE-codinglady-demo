@@ -2,13 +2,13 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useStore } from "@/lib/store";
+import { useStore, monthsSince, type BabyProfile } from "@/lib/store";
 import { DEMO_IMAGES, DEMO_TAKEN_ATS, DEMO_PLACES, DEMO_PEOPLES } from "@/lib/demo";
 
 const MAX_PHOTOS = 20;
 
-/** 读取文件为 base64，并压到最长边 900px 的 JPEG（省存储、省上传） */
-async function fileToDataUrl(file: File): Promise<string> {
+/** 读取文件为 base64，并压到最长边 maxSize 的 JPEG（省存储、省上传） */
+async function fileToDataUrl(file: File, maxSize = 900): Promise<string> {
   const raw = await new Promise<string>((resolve, reject) => {
     const r = new FileReader();
     r.onload = () => resolve(r.result as string);
@@ -22,7 +22,7 @@ async function fileToDataUrl(file: File): Promise<string> {
       i.onerror = () => reject(new Error("图片解析失败"));
       i.src = raw;
     });
-    const scale = Math.min(1, 900 / Math.max(img.width, img.height, 1));
+    const scale = Math.min(1, maxSize / Math.max(img.width, img.height, 1));
     const canvas = document.createElement("canvas");
     canvas.width = Math.max(1, Math.round(img.width * scale));
     canvas.height = Math.max(1, Math.round(img.height * scale));
@@ -42,16 +42,115 @@ function toYMD(ms: number): string {
   return `${d.getFullYear()}-${m}-${day}`;
 }
 
+// ---------- 第一屏：宝宝档案（头像 / 昵称 / 生日） ----------
+function ProfileForm({ onDone }: { onDone: (p: BabyProfile) => void }) {
+  const [nickname, setNickname] = useState("");
+  const [birthday, setBirthday] = useState("");
+  const [avatar, setAvatar] = useState("");
+  const avatarRef = useRef<HTMLInputElement>(null);
+  const today = new Date().toISOString().slice(0, 10);
+  const valid = nickname.trim().length > 0 && birthday.length > 0 && avatar.length > 0;
+
+  async function handleAvatar(list: FileList | null) {
+    const f = list?.[0];
+    if (!f || !f.type.startsWith("image/")) return;
+    setAvatar(await fileToDataUrl(f, 300));
+  }
+
+  return (
+    <div className="space-y-6 animate-float-up">
+      <section className="pt-6 text-center">
+        <h1 className="font-display text-2xl text-ink">先认识一下宝宝 👋</h1>
+        <p className="text-sm text-ink-soft mt-2">一次设置，之后打开就是 TA 的衣橱</p>
+      </section>
+
+      {/* 头像：用于在多孩照片中认出宝宝 */}
+      <section className="flex flex-col items-center gap-2">
+        <button
+          type="button"
+          onClick={() => avatarRef.current?.click()}
+          className="w-28 h-28 rounded-full overflow-hidden bg-gradient-to-br from-macaron-pink-soft to-macaron-blue-soft border-2 border-white shadow flex items-center justify-center text-5xl active:scale-95 transition"
+        >
+          {avatar ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={avatar} alt="宝宝头像" className="w-full h-full object-cover" />
+          ) : (
+            "👶"
+          )}
+        </button>
+        <p className="text-xs text-ink-soft">
+          {avatar ? "点击更换" : "上传宝宝正脸照"}
+        </p>
+        <p className="text-[10px] text-ink-soft/70">用于在多孩照片中认出 TA</p>
+        <input
+          ref={avatarRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => handleAvatar(e.target.files)}
+        />
+      </section>
+
+      <section className="card-dream rounded-3xl p-5 space-y-4">
+        <div>
+          <label className="text-sm font-medium text-ink" htmlFor="nickname">
+            宝宝的小名
+          </label>
+          <input
+            id="nickname"
+            type="text"
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value)}
+            maxLength={12}
+            placeholder="比如：小笼包"
+            className="mt-2 w-full rounded-2xl bg-white/80 border border-[#f4e7d2] px-4 py-3 text-sm text-ink outline-none focus:border-macaron-pink"
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium text-ink" htmlFor="birthday">
+            宝宝生日
+          </label>
+          <input
+            id="birthday"
+            type="date"
+            value={birthday}
+            max={today}
+            onChange={(e) => setBirthday(e.target.value)}
+            className="mt-2 w-full rounded-2xl bg-white/80 border border-[#f4e7d2] px-4 py-3 text-sm text-ink outline-none focus:border-macaron-pink"
+          />
+          <p className="text-[10px] text-ink-soft/70 mt-1.5">
+            月龄、尺码、成长节点都由生日自动推算，不用手填
+          </p>
+        </div>
+      </section>
+
+      <button
+        type="button"
+        disabled={!valid}
+        onClick={() => onDone({ nickname: nickname.trim(), birthday, avatar })}
+        className="w-full py-4 rounded-full bg-macaron-pink text-white font-medium shadow-lg disabled:opacity-40 active:scale-[0.98] transition"
+      >
+        开始建衣橱 →
+      </button>
+    </div>
+  );
+}
+
+// ---------- 第二屏：相册授权（核心入口） ----------
 export default function Home() {
   const router = useRouter();
-  const { startScan, ready } = useStore();
-  const [monthAge, setMonthAge] = useState(9);
+  const { startScan, ready, profile, setProfile, reset } = useStore();
   const [reading, setReading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   if (!ready) {
     return <div className="py-20 text-center text-ink-soft">加载中…</div>;
   }
+  if (!profile) {
+    return <ProfileForm onDone={setProfile} />;
+  }
+
+  const monthAge = monthsSince(profile.birthday);
 
   async function handleFiles(list: FileList | null) {
     if (!list || list.length === 0) return;
@@ -76,86 +175,59 @@ export default function Home() {
   }
 
   function handleDemo() {
-    startScan(monthAge, DEMO_IMAGES, DEMO_TAKEN_ATS, DEMO_PLACES, DEMO_PEOPLES);
+    // 演示数据自带叙事：9 月龄宝宝的 12 张照片（满月 → 9 个月）
+    startScan(9, DEMO_IMAGES, DEMO_TAKEN_ATS, DEMO_PLACES, DEMO_PEOPLES);
     router.push("/processing");
   }
 
   return (
     <div className="space-y-6 animate-float-up">
-      {/* 产品名 + 一句话 */}
-      <section className="pt-4 text-center">
-        <div className="mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-macaron-pink-soft to-macaron-blue-soft border border-white flex items-center justify-center text-4xl shadow-inner">
-          🧸
+      {/* 宝宝信息条 */}
+      <section className="card-dream rounded-3xl p-4 flex items-center gap-3">
+        <div className="w-14 h-14 rounded-full overflow-hidden bg-gradient-to-br from-macaron-pink-soft to-macaron-blue-soft border border-white shadow-inner shrink-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={profile.avatar} alt="宝宝头像" className="w-full h-full object-cover" />
         </div>
-        <h1 className="font-display text-3xl mt-3 text-ink">宝宝衣橱</h1>
-        <p className="text-sm text-ink-soft mt-2 leading-relaxed px-2">
-          宝宝的每一件衣服，都早已在你的相册里。授权相册，AI 自动建成宝宝衣橱——哪件常穿、哪件闲置、哪件快穿不下，还有每一份&ldquo;第一次穿&rdquo;的成长纪念。
+        <div className="flex-1 min-w-0">
+          <p className="font-display text-lg text-ink truncate">{profile.nickname}</p>
+          <p className="text-xs text-ink-soft mt-0.5">
+            {monthAge} 个月 · 生日 {profile.birthday}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={reset}
+          className="text-[10px] text-ink-soft underline underline-offset-2 shrink-0"
+        >
+          重新设置
+        </button>
+      </section>
+
+      {/* 核心入口：相册授权 */}
+      <section className="pt-2 text-center">
+        <p className="text-sm text-ink-soft leading-relaxed px-2">
+          {profile.nickname}的每一件衣服，都早已在你的相册里。
         </p>
       </section>
-
-      {/* 月龄选择器（唯一输入字段） */}
-      <section className="card-dream rounded-3xl p-5">
-        <div className="flex items-center justify-between">
-          <label className="text-sm font-medium text-ink">宝宝现在几个月了？</label>
-          <span className="text-xs text-ink-soft">唯一要填的字段 ☝️</span>
-        </div>
-        <div className="mt-4 flex items-center gap-4">
-          <button
-            type="button"
-            aria-label="减少月龄"
-            onClick={() => setMonthAge((m) => Math.max(0, m - 1))}
-            className="w-9 h-9 rounded-full bg-macaron-pink-soft text-macaron-pink-deep text-lg font-bold active:scale-95 transition"
-          >
-            −
-          </button>
-          <div className="flex-1 text-center">
-            <span className="font-display text-4xl text-ink">{monthAge}</span>
-            <span className="text-sm text-ink-soft ml-1">个月</span>
-          </div>
-          <button
-            type="button"
-            aria-label="增加月龄"
-            onClick={() => setMonthAge((m) => Math.min(48, m + 1))}
-            className="w-9 h-9 rounded-full bg-macaron-blue-soft text-macaron-blue-deep text-lg font-bold active:scale-95 transition"
-          >
-            ＋
-          </button>
-        </div>
-        <input
-          type="range"
-          min={0}
-          max={48}
-          value={monthAge}
-          onChange={(e) => setMonthAge(Number(e.target.value))}
-          className="w-full mt-4 accent-[#f08bb0]"
-          aria-label="宝宝月龄（0-48 个月）"
-        />
-        <div className="flex justify-between text-[10px] text-ink-soft/70">
-          <span>0 个月</span>
-          <span>48 个月</span>
-        </div>
-      </section>
-
-      {/* 入口 ①：模拟相册授权 */}
       <button
         type="button"
         disabled={reading}
         onClick={() => fileRef.current?.click()}
-        className="w-full card-dream rounded-3xl p-5 text-left hover:scale-[1.01] active:scale-[0.99] transition-transform disabled:opacity-60"
+        className="w-full rounded-3xl p-6 text-left bg-gradient-to-br from-macaron-pink to-macaron-pink-deep text-white shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-transform disabled:opacity-60"
       >
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-macaron-pink to-macaron-pink-deep flex items-center justify-center text-2xl text-white shadow">
+          <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center text-3xl">
             {reading ? "⏳" : "📷"}
           </div>
           <div className="flex-1">
-            <p className="font-medium text-ink">
-              {reading ? "正在读取照片…" : "模拟相册授权"}
+            <p className="font-display text-xl">
+              {reading ? "正在读取照片…" : "相册授权"}
             </p>
-            <p className="text-xs text-ink-soft mt-0.5">
-              选择宝宝照片（最多 {MAX_PHOTOS} 张），AI 逐张分解衣物
+            <p className="text-xs text-white/85 mt-1 leading-relaxed">
+              选择宝宝照片（每次最多 {MAX_PHOTOS} 张），AI 会分析后生成衣物卡片
             </p>
           </div>
-          <span className="text-macaron-pink text-xl">›</span>
+          <span className="text-2xl text-white/90">›</span>
         </div>
       </button>
       <input
@@ -167,28 +239,19 @@ export default function Home() {
         onChange={(e) => handleFiles(e.target.files)}
       />
 
-      {/* 入口 ②：使用演示数据 */}
-      <button
-        type="button"
-        onClick={handleDemo}
-        className="w-full card-dream rounded-3xl p-5 text-left hover:scale-[1.01] active:scale-[0.99] transition-transform"
-      >
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-macaron-blue to-macaron-blue-deep flex items-center justify-center text-2xl text-white shadow">
-            ✨
-          </div>
-          <div className="flex-1">
-            <p className="font-medium text-ink">使用演示数据</p>
-            <p className="text-xs text-ink-soft mt-0.5">
-              一键加载 12 张宝宝照片，从满月穿到 9 个月
-            </p>
-          </div>
-          <span className="text-macaron-blue text-xl">›</span>
-        </div>
-      </button>
+      {/* 兜底入口：演示数据（保留，弱化呈现） */}
+      <p className="text-center pt-1">
+        <button
+          type="button"
+          onClick={handleDemo}
+          className="text-xs text-macaron-blue-deep underline underline-offset-4"
+        >
+          没有宝宝照片？先用演示数据看看 →
+        </button>
+      </p>
 
-      <p className="text-center text-[11px] text-ink-soft/70 leading-relaxed pt-1">
-        Demo 说明：照片仅在本机处理，不会上传真实相册；
+      <p className="text-center text-[11px] text-ink-soft/70 leading-relaxed pt-2">
+        照片仅在本机处理，不会上传真实相册；
         <br />
         零次手动录入，衣橱自己长出来。
       </p>

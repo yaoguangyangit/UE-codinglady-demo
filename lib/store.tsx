@@ -12,6 +12,21 @@ import type { ClothingItem, Milestone, PhotoItem, Reminder } from "./types";
 
 const STORAGE_KEY = "baobao_wardrobe_v2";
 
+/** 宝宝档案（首个页面收集：头像/昵称/生日，月龄由生日反推） */
+export interface BabyProfile {
+  nickname: string;
+  birthday: string; // YYYY-MM-DD
+  avatar: string; // base64 data url（压缩小图）
+}
+
+/** 由生日反推月龄（0-48 封顶，与尺码表衔接） */
+export function monthsSince(birthday: string): number {
+  const b = new Date(`${birthday}T12:00:00`);
+  if (isNaN(b.getTime())) return 9;
+  const months = (Date.now() - b.getTime()) / (86400000 * 30.44);
+  return Math.max(0, Math.min(48, Math.floor(months)));
+}
+
 /** 一次完整扫描 + 推演的结果 */
 export interface ScanResult {
   photos: PhotoItem[];
@@ -23,6 +38,7 @@ export interface ScanResult {
 }
 
 interface StoreData {
+  profile: BabyProfile | null; // 宝宝档案：头像/昵称/生日
   monthAge: number;
   images: string[]; // base64 data url
   takenAts: string[]; // 与 images 对齐的拍摄日期
@@ -33,6 +49,7 @@ interface StoreData {
 
 interface StoreContextValue extends StoreData {
   ready: boolean;
+  setProfile: (p: BabyProfile) => void;
   startScan: (
     monthAge: number,
     images: string[],
@@ -48,6 +65,7 @@ interface StoreContextValue extends StoreData {
 const StoreContext = createContext<StoreContextValue | null>(null);
 
 const EMPTY: StoreData = {
+  profile: null,
   monthAge: 9,
   images: [],
   takenAts: [],
@@ -98,6 +116,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (ready) persist(data);
   }, [data, ready]);
 
+  const setProfile = useCallback((profile: BabyProfile) => {
+    setData((d) => ({ ...d, profile }));
+  }, []);
+
   const startScan = useCallback(
     (
       monthAge: number,
@@ -106,7 +128,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       places: (string | undefined)[] = [],
       peoples: (string | undefined)[] = []
     ) => {
-      setData({ monthAge, images, takenAts, places, peoples, result: null });
+      setData((d) => ({ ...d, monthAge, images, takenAts, places, peoples, result: null }));
     },
     []
   );
@@ -136,7 +158,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   return (
     <StoreContext.Provider
-      value={{ ...data, ready, startScan, setResult, setItemStory, reset }}
+      value={{ ...data, ready, setProfile, startScan, setResult, setItemStory, reset }}
     >
       {children}
     </StoreContext.Provider>
