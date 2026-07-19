@@ -96,6 +96,12 @@ function esc(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+/** 照片占位图（线上无真实照片时的优雅降级）：奶油底 + 标签 */
+export function svgPhotoPlaceholder(label: string): string {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300"><rect width="300" height="300" rx="20" fill="#FFF6E6"/><circle cx="150" cy="128" r="34" fill="#FCE7F0"/><text x="150" y="141" text-anchor="middle" font-size="34">🍼</text><text x="150" y="200" text-anchor="middle" font-size="15" fill="#A68F7D" font-family="PingFang SC,Hiragino Sans GB,Microsoft YaHei,sans-serif">${esc(label)}</text><text x="150" y="228" text-anchor="middle" font-size="11" fill="#C9B7A0" font-family="PingFang SC,Hiragino Sans GB,Microsoft YaHei,sans-serif">宝宝照片</text></svg>`;
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
 /** 生成商品主图（SVG data url）：奶油底 + 衣物简笔画 + 品名，电商主图版式 */
 export function svgProductImage(item: {
   name: string;

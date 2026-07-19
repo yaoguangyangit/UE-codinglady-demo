@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useStore, monthsSince, type BabyProfile } from "@/lib/store";
-import { DEMO_IMAGES, DEMO_TAKEN_ATS, DEMO_PLACES, DEMO_PEOPLES } from "@/lib/demo";
+import { PRESET_DEMO_IMAGES, PRESET_DEMO_TAKEN_ATS } from "@/lib/preset";
 
 const MAX_PHOTOS = 20;
 
@@ -175,8 +175,8 @@ export default function Home() {
   }
 
   function handleDemo() {
-    // 演示数据自带叙事：9 月龄宝宝的 12 张照片（满月 → 9 个月）
-    startScan(9, DEMO_IMAGES, DEMO_TAKEN_ATS, DEMO_PLACES, DEMO_PEOPLES);
+    // 演示数据与相册授权共用同一份预处理结果（20 张真实照片的完整 AI 分析）
+    startScan(40, PRESET_DEMO_IMAGES, PRESET_DEMO_TAKEN_ATS);
     router.push("/processing");
   }
 

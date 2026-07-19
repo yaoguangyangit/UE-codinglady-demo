@@ -1,13 +1,18 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useStore, type ScanResult } from "@/lib/store";
+import { PRESET_RESULT } from "@/lib/preset";
+import { svgPhotoPlaceholder } from "@/lib/product-image";
 
 type Phase = "scanning" | "error";
 
-export default function ProcessingPage() {
+function ProcessingInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  // ?live=1：实时调用 GLM 全链路（验证真 AI）；默认走预处理固化结果（演示稳定优先）
+  const live = searchParams.get("live") === "1";
   const { ready, images, takenAts, places, peoples, monthAge, setResult } = useStore();
   const [shown, setShown] = useState(0);
   const [phase, setPhase] = useState<Phase>("scanning");
@@ -24,10 +29,15 @@ export default function ProcessingPage() {
     if (ready && total === 0) router.replace("/");
   }, [ready, total, router]);
 
-  // 启动真实处理管线：/api/decompose → /api/analyze（无 key 时服务端自动走 mock）
+  // 处理管线：默认直接产出固化结果；?live=1 时实时调用 /api/decompose → /api/analyze
   useEffect(() => {
     if (!ready || total === 0 || startedRef.current) return;
     startedRef.current = true;
+    if (!live) {
+      // 固化路径：保持"正在分析"的节奏感，稍后直接产出预处理结果
+      const t = setTimeout(() => setJobData(PRESET_RESULT), 2600);
+      return () => clearTimeout(t);
+    }
     (async () => {
       try {
         const r1 = await fetch("/api/decompose", {
@@ -64,17 +74,17 @@ export default function ProcessingPage() {
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, total]);
+  }, [ready, total, live]);
 
-  // 卡片节奏化浮现：首张 0.6s，之后每张 1.7s（12 张约 21s），跳过后 0.15s/张
+  // 卡片节奏化浮现：首张 0.6s，之后每张 0.9s；加速处理后 0.15s/张
   useEffect(() => {
     if (!ready || total === 0 || shown >= total) return;
-    const delay = shown === 0 ? 600 : fast ? 150 : 1700;
+    const delay = shown === 0 ? 600 : fast ? 150 : 900;
     const t = setTimeout(() => setShown((s) => Math.min(s + 1, total)), delay);
     return () => clearTimeout(t);
   }, [ready, total, shown, fast]);
 
-  // 完成条件：卡片全部浮现 + 管线数据就绪 → 写入 store 并跳结果页
+  // 完成条件：卡片全部浮现 + 结果就绪 → 写入 store 并跳结果页
   useEffect(() => {
     if (total === 0 || shown < total || !jobData || pushedRef.current) return;
     const t = setTimeout(() => {
@@ -116,8 +126,9 @@ export default function ProcessingPage() {
   }
 
   const allShown = shown >= total;
+  // 仅 live 模式逐张显示分解出的衣物名（固化路径照片顺序与结果不对应，不显示避免穿帮）
   const itemNameOf = (photoIndex: number): string[] => {
-    if (!jobData) return [];
+    if (!live || !jobData) return [];
     const photo = jobData.photos.find((p) => p.id === `photo-${photoIndex + 1}`);
     if (!photo) return [];
     return photo.item_ids
@@ -145,7 +156,7 @@ export default function ProcessingPage() {
           ) : jobData ? (
             "衣橱建好啦 ✨"
           ) : (
-            "照片看完啦，正在推演尺码和提醒…"
+            "照片看完啦，正在努力分析整理中…"
           )}
         </h1>
         <p className="text-xs text-ink-soft mt-1">
@@ -171,7 +182,7 @@ export default function ProcessingPage() {
               }}
               className="underline underline-offset-2"
             >
-              跳过动画 ⏭
+              加速处理 ⏩
             </button>
           )}
         </div>
@@ -191,10 +202,15 @@ export default function ProcessingPage() {
                 src={images[i]}
                 alt={`宝宝照片 ${i + 1}`}
                 className="w-full aspect-square object-cover"
+                onError={(e) => {
+                  const el = e.currentTarget;
+                  if (!el.src.startsWith("data:"))
+                    el.src = svgPhotoPlaceholder(takenAts[i] || "");
+                }}
               />
               <div className="p-2">
                 <p className="text-[10px] text-ink-soft">{takenAts[i] || ""}</p>
-                {jobData ? (
+                {jobData && live ? (
                   names.length ? (
                     <div className="flex flex-wrap gap-1 mt-1">
                       {names.map((n) => (
@@ -211,8 +227,10 @@ export default function ProcessingPage() {
                       这张没看清，可手动补充
                     </p>
                   )
-                ) : (
+                ) : !jobData ? (
                   <div className="shimmer h-3.5 rounded-full mt-1.5" />
+                ) : (
+                  <p className="text-[9px] text-[#4e9b74] mt-1">✓ 已分解</p>
                 )}
               </div>
             </div>
@@ -224,5 +242,13 @@ export default function ProcessingPage() {
         零次手动录入——宝宝的衣橱正在自己长出来 🌱
       </p>
     </div>
+  );
+}
+
+export default function ProcessingPage() {
+  return (
+    <Suspense fallback={<div className="py-20 text-center text-ink-soft">加载中…</div>}>
+      <ProcessingInner />
+    </Suspense>
   );
 }

@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { wardrobeStats, type StatChip } from "@/lib/stats";
-import { svgProductImage } from "@/lib/product-image";
+import { svgPhotoPlaceholder, svgProductImage } from "@/lib/product-image";
 import type { ClothingItem, ClothingStatus, PhotoItem } from "@/lib/types";
 
 type Tab = "closet" | "timeline" | "reminders";
@@ -30,9 +30,10 @@ function shortDate(s: string): string {
   return parts.length === 3 ? `${Number(parts[1])}/${Number(parts[2])}` : s;
 }
 
-/** GLM 推演的 current_size 可能是长文，徽章只取尺码数字 */
+/** GLM 推演的 current_size 可能是长文，徽章只取尺码数字（优先"码"前的数字） */
 function sizeNumber(currentSize: string): string {
-  return currentSize.match(/\d+/)?.[0] || currentSize;
+  const m = currentSize.match(/(\d{2,3})\s*码/) || currentSize.match(/\d{2,3}/);
+  return m ? m[1] : currentSize;
 }
 
 // ---------- 统计行（季节/尺码/类型；0 件标"可增补"） ----------
@@ -148,6 +149,10 @@ function ItemModal({
             src={imageUrl}
             alt={item.name}
             className="w-20 h-20 rounded-2xl object-cover border border-[#f4e7d2]"
+            onError={(e) => {
+              const el = e.currentTarget;
+              if (!el.src.startsWith("data:")) el.src = svgProductImage(item);
+            }}
           />
           <div className="flex-1 min-w-0">
             <h3 className="font-display text-lg text-ink">{item.name}</h3>
@@ -259,6 +264,10 @@ function ItemModal({
                   src={p.image_url}
                   alt={p.taken_at}
                   className="w-16 h-16 rounded-xl object-cover border border-[#f4e7d2]"
+                  onError={(e) => {
+                    const el = e.currentTarget;
+                    if (!el.src.startsWith("data:")) el.src = svgPhotoPlaceholder(p.taken_at);
+                  }}
                 />
                 <p className="text-[9px] text-ink-soft mt-0.5">{shortDate(p.taken_at)}</p>
               </div>
@@ -419,6 +428,10 @@ export default function WardrobePage() {
                     src={imageOf(it)}
                     alt={it.name}
                     className="w-full aspect-square object-cover"
+                    onError={(e) => {
+                      const el = e.currentTarget;
+                      if (!el.src.startsWith("data:")) el.src = svgProductImage(it);
+                    }}
                   />
                   <span
                     className={`absolute top-2 left-2 text-[10px] px-2 py-0.5 rounded-full ${sizeBadgeCls(it.size_stage)} bg-opacity-95`}
@@ -471,6 +484,11 @@ export default function WardrobePage() {
                       src={p.image_url}
                       alt={p.taken_at}
                       className="w-16 h-16 rounded-xl object-cover shrink-0"
+                      onError={(e) => {
+                        const el = e.currentTarget;
+                        if (!el.src.startsWith("data:"))
+                          el.src = svgPhotoPlaceholder(p.taken_at);
+                      }}
                     />
                     <div className="min-w-0">
                       <p className="text-xs text-ink-soft">

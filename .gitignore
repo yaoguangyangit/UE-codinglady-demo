@@ -39,6 +39,7 @@ yarn-error.log*
 
 # 真实宝宝照片（隐私红线：不进仓库）
 /demo image/
+/public/preset-photos/
 
 # typescript
 *.tsbuildinfo
