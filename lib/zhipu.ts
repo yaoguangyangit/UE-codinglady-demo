@@ -12,10 +12,12 @@ import { buildStoryFacts, type StoryFacts } from "./story";
 import { findDemoPhoto } from "./demo";
 
 const ZHIPU_URL = "https://open.bigmodel.cn/api/paas/v4/chat/completions";
+const ZHIPU_IMAGE_URL = "https://open.bigmodel.cn/api/paas/v4/images/generations";
 
 // 模型可经环境变量覆盖，默认使用 plus 系列
 const VISION_MODEL = process.env.ZHIPU_VISION_MODEL || "glm-4v-plus";
 const TEXT_MODEL = process.env.ZHIPU_TEXT_MODEL || "glm-4-plus";
+const IMAGE_MODEL = process.env.ZHIPU_IMAGE_MODEL || "cogview-3-flash";
 
 function hasKey() {
   return Boolean(process.env.ZHIPU_API_KEY);
@@ -123,6 +125,60 @@ export async function decomposePhoto(imageBase64: string): Promise<DecomposeResu
   }
 }
 
+// ============ ⑤ 商品主图合成（CogView；失败/无 key 由前端回落 SVG）============
+async function generateProductImage(
+  item: ClothingItem,
+  retries = 3
+): Promise<string | null> {
+  const prompt = `婴儿${item.type}的电商商品主图，颜色：${item.color}，图案：${item.pattern}，${item.name}。童装平铺拍摄，柔和米白色背景，自然柔光，简洁干净，专业产品摄影，正方形构图，画面中只有这一件衣物`;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch(ZHIPU_IMAGE_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.ZHIPU_API_KEY}`,
+        },
+        body: JSON.stringify({ model: IMAGE_MODEL, prompt }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const url = data?.data?.[0]?.url;
+        return typeof url === "string" && url ? url : null;
+      }
+      const txt = await res.text();
+      if (res.status === 429 && attempt < retries) {
+        // 账户限流：退避后重试（5s / 10s / 20s）
+        await new Promise((r) => setTimeout(r, 5000 * 2 ** attempt));
+        continue;
+      }
+      console.warn(`[cogview] ${item.name} 生成失败 ${res.status}: ${txt.slice(0, 160)}`);
+      return null;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+/** 批量：并发 2 为所有衣物合成商品主图；无 key 返回空（前端统一用 SVG 简笔画） */
+async function generateAllProductImages(
+  items: ClothingItem[]
+): Promise<Record<string, string>> {
+  const out: Record<string, string> = {};
+  if (!hasKey()) return out;
+  let cursor = 0;
+  async function worker() {
+    while (cursor < items.length) {
+      const it = items[cursor++];
+      const url = await generateProductImage(it);
+      if (url) out[it.id] = url;
+    }
+  }
+  await Promise.all([worker(), worker()]);
+  return out;
+}
+
 // ============ ③ 尺码推演 + 提醒（GLM-4）============
 interface GlmAnalyzeShape {
   current_size?: string;
@@ -144,9 +200,11 @@ export async function analyzeWardrobe(input: AnalyzeInput): Promise<AnalyzeResul
   // "它的故事"：每件衣物默认生成（无 key 直接全 mock）
   const stories = await generateAllStories(input, factsList);
 
-  if (!hasKey()) return mockAnalyze(input, factsList, stories);
-
-  const timeline = input.items.map((it) => ({
+  let base: AnalyzeResult;
+  if (!hasKey()) {
+    base = mockAnalyze(input, factsList, stories);
+  } else {
+    const timeline = input.items.map((it) => ({
     名称: it.name,
     推断尺码: it.size_stage,
     首次穿着日期: it.first_worn_at,
@@ -163,38 +221,42 @@ export async function analyzeWardrobe(input: AnalyzeInput): Promise<AnalyzeResul
 3. shopping: 换季采购建议（3 条以内，具体尺码+品类）
 语气：温柔、像有经验的朋友，不制造焦虑。`;
 
-  try {
-    const raw = await chat([{ role: "user", content: prompt }], TEXT_MODEL, true);
-    const r = extractJSON<GlmAnalyzeShape>(raw);
-    const now = new Date().toISOString();
-    const reminders: Reminder[] = [];
-    let n = 0;
-    for (const a of r.alerts || []) {
-      if (!a?.message) continue;
-      const target = input.items.find(
-        (it) => a.item && (a.item.includes(it.name) || it.name.includes(a.item))
-      );
-      reminders.push({
-        id: `rem-${++n}`,
-        item_id: target?.id ?? null,
-        kind: "size_alert",
-        message: a.message,
-        created_at: now,
-      });
+    try {
+      const raw = await chat([{ role: "user", content: prompt }], TEXT_MODEL, true);
+      const r = extractJSON<GlmAnalyzeShape>(raw);
+      const now = new Date().toISOString();
+      const reminders: Reminder[] = [];
+      let n = 0;
+      for (const a of r.alerts || []) {
+        if (!a?.message) continue;
+        const target = input.items.find(
+          (it) => a.item && (a.item.includes(it.name) || it.name.includes(a.item))
+        );
+        reminders.push({
+          id: `rem-${++n}`,
+          item_id: target?.id ?? null,
+          kind: "size_alert",
+          message: a.message,
+          created_at: now,
+        });
+      }
+      // 闲置清单由归并数据直接产出（拒绝也是数据，不依赖 LLM）
+      reminders.push(...idleReminders(input.items, n));
+      const milestones: Milestone[] = buildMilestones(input.items);
+      base = {
+        current_size: String(r.current_size || sizeForMonths(input.monthAge)),
+        reminders,
+        shopping: (r.shopping || []).slice(0, 3).map(String),
+        milestones,
+        stories,
+      };
+    } catch {
+      base = mockAnalyze(input, factsList, stories);
     }
-    // 闲置清单由归并数据直接产出（拒绝也是数据，不依赖 LLM）
-    reminders.push(...idleReminders(input.items, n));
-    const milestones: Milestone[] = buildMilestones(input.items);
-    return {
-      current_size: String(r.current_size || sizeForMonths(input.monthAge)),
-      reminders,
-      shopping: (r.shopping || []).slice(0, 3).map(String),
-      milestones,
-      stories,
-    };
-  } catch {
-    return mockAnalyze(input, factsList, stories);
   }
+  // 商品主图合成独立于分析成败（无 key 返回空对象，前端统一回落 SVG 简笔画）
+  const productImages = await generateAllProductImages(input.items);
+  return { ...base, product_images: productImages };
 }
 
 // ============ ④ 它的故事（GLM-4，批量 + 单件）============

@@ -18,6 +18,7 @@ export interface ClothingItem {
   first_worn_at: string; // 首次穿着日期 YYYY-MM-DD
   last_worn_at: string; // 末次穿着日期 YYYY-MM-DD
   rep_image_url: string; // 代表照片
+  product_image_url?: string; // AI 合成的商品主图（CogView；无 key/失败时前端回落 SVG 简笔画）
   story?: string; // 它的故事（感性场景描述，分析阶段自动生成）
   status: ClothingStatus;
 }
@@ -89,6 +90,7 @@ export interface AnalyzeResult {
   shopping: string[]; // 换季采购建议（≤3 条）
   milestones: Milestone[]; // 尺码里程碑
   stories: Record<string, string>; // item_id → 它的故事（分析阶段批量生成）
+  product_images?: Record<string, string>; // item_id → AI 合成商品主图 URL（无 key 时缺省）
 }
 
 /** POST /api/decompose 输出 */

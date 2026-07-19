@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { wardrobeStats, type StatChip } from "@/lib/stats";
+import { svgProductImage } from "@/lib/product-image";
 import type { ClothingItem, ClothingStatus, PhotoItem } from "@/lib/types";
 
 type Tab = "closet" | "timeline" | "reminders";
@@ -67,12 +68,14 @@ function ItemModal({
   item,
   photos,
   monthAge,
+  imageUrl,
   onClose,
   onStory,
 }: {
   item: ClothingItem;
   photos: PhotoItem[];
   monthAge: number;
+  imageUrl: string;
   onClose: () => void;
   onStory: (id: string, story: string) => void;
 }) {
@@ -142,7 +145,7 @@ function ItemModal({
         <div className="flex items-start gap-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={item.rep_image_url}
+            src={imageUrl}
             alt={item.name}
             className="w-20 h-20 rounded-2xl object-cover border border-[#f4e7d2]"
           />
@@ -274,6 +277,8 @@ export default function WardrobePage() {
   const { ready, result, monthAge, profile, setItemStory, reset } = useStore();
   const [tab, setTab] = useState<Tab>("closet");
   const [selected, setSelected] = useState<ClothingItem | null>(null);
+  // 衣橱图片模式：model=宝宝穿着原图（模特图）/ product=AI 合成商品主图
+  const [viewMode, setViewMode] = useState<"model" | "product">("model");
 
   if (!ready) {
     return <div className="py-20 text-center text-ink-soft">加载中…</div>;
@@ -303,6 +308,9 @@ export default function WardrobePage() {
   const timelinePhotos = [...photos].sort((a, b) => b.taken_at.localeCompare(a.taken_at));
   const stats = wardrobeStats(items, photos, monthAge);
   const aiSizeNote = currentSize.length > 4 ? currentSize : ""; // GLM 长文尺码解读，挪到提醒 Tab
+  // 当前模式下的卡片图：商品图缺失时回落 SVG 简笔画（兜底不破）
+  const imageOf = (it: ClothingItem) =>
+    viewMode === "product" ? it.product_image_url || svgProductImage(it) : it.rep_image_url;
 
   const TABS: { key: Tab; label: string; icon: string }[] = [
     { key: "closet", label: "衣橱总览", icon: "🧺" },
@@ -385,42 +393,54 @@ export default function WardrobePage() {
 
       {/* ① 衣橱总览 */}
       {tab === "closet" && (
-        <section className="grid grid-cols-2 gap-3">
-          {items.map((it, idx) => (
+        <section className="space-y-3">
+          {/* 原图 ⇄ 商品主图切换（需求：衣橱感） */}
+          <div className="flex justify-end">
             <button
-              key={it.id}
               type="button"
-              onClick={() => setSelected(it)}
-              className="card-dream rounded-3xl overflow-hidden text-left animate-pop-in hover:scale-[1.02] transition-transform"
-              style={{ animationDelay: `${Math.min(idx * 60, 400)}ms` }}
+              onClick={() => setViewMode((v) => (v === "model" ? "product" : "model"))}
+              className="text-xs px-4 py-2 rounded-full bg-card text-macaron-pink-deep border border-macaron-pink shadow-sm active:scale-95 transition"
             >
-              <div className="relative">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={it.rep_image_url}
-                  alt={it.name}
-                  className="w-full aspect-square object-cover"
-                />
-                <span
-                  className={`absolute top-2 left-2 text-[10px] px-2 py-0.5 rounded-full ${sizeBadgeCls(it.size_stage)} bg-opacity-95`}
-                >
-                  {it.size_stage} 码
-                </span>
-                <span
-                  className={`absolute top-2 right-2 text-[10px] px-2 py-0.5 rounded-full ${STATUS_META[it.status].cls} bg-opacity-95`}
-                >
-                  {STATUS_META[it.status].label}
-                </span>
-              </div>
-              <div className="p-3">
-                <p className="text-sm font-medium text-ink truncate">{it.name}</p>
-                <p className="text-[11px] text-ink-soft mt-0.5">
-                  穿过 {it.wear_count} 次 · {shortDate(it.first_worn_at)} →{" "}
-                  {shortDate(it.last_worn_at)}
-                </p>
-              </div>
+              {viewMode === "model" ? "👕 仅查看服饰" : "👶 查看模特图"}
             </button>
-          ))}
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {items.map((it, idx) => (
+              <button
+                key={it.id}
+                type="button"
+                onClick={() => setSelected(it)}
+                className="card-dream rounded-3xl overflow-hidden text-left animate-pop-in hover:scale-[1.02] transition-transform"
+                style={{ animationDelay: `${Math.min(idx * 60, 400)}ms` }}
+              >
+                <div className="relative">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={imageOf(it)}
+                    alt={it.name}
+                    className="w-full aspect-square object-cover"
+                  />
+                  <span
+                    className={`absolute top-2 left-2 text-[10px] px-2 py-0.5 rounded-full ${sizeBadgeCls(it.size_stage)} bg-opacity-95`}
+                  >
+                    {it.size_stage} 码
+                  </span>
+                  <span
+                    className={`absolute top-2 right-2 text-[10px] px-2 py-0.5 rounded-full ${STATUS_META[it.status].cls} bg-opacity-95`}
+                  >
+                    {STATUS_META[it.status].label}
+                  </span>
+                </div>
+                <div className="p-3">
+                  <p className="text-sm font-medium text-ink truncate">{it.name}</p>
+                  <p className="text-[11px] text-ink-soft mt-0.5">
+                    穿过 {it.wear_count} 次 · {shortDate(it.first_worn_at)} →{" "}
+                    {shortDate(it.last_worn_at)}
+                  </p>
+                </div>
+              </button>
+            ))}
+          </div>
         </section>
       )}
 
@@ -565,6 +585,7 @@ export default function WardrobePage() {
           item={items.find((it) => it.id === selected.id) || selected}
           photos={photos}
           monthAge={monthAge}
+          imageUrl={imageOf(selected)}
           onClose={() => setSelected(null)}
           onStory={setItemStory}
         />

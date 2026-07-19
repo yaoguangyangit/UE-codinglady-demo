@@ -44,10 +44,11 @@ export default function ProcessingPage() {
         });
         const d2 = await r2.json();
         if (!r2.ok) throw new Error(d2?.error || "尺码推演失败");
-        // 把 analyze 批量生成的"它的故事"合并进衣物档案
+        // 把 analyze 批量生成的"它的故事"与商品主图合并进衣物档案
         const itemsWithStories = (d1.items as ScanResult["items"]).map((it) => ({
           ...it,
           story: d2.stories?.[it.id] ?? it.story,
+          product_image_url: d2.product_images?.[it.id],
         }));
         setJobData({
           photos: d1.photos,
