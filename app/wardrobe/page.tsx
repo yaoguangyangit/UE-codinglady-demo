@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import BottomTab, { type TabKey } from "@/components/BottomTab";
 import { useStore } from "@/lib/store";
 import { wardrobeStats, type StatChip } from "@/lib/stats";
 import { svgPhotoPlaceholder, svgProductImage } from "@/lib/product-image";
@@ -460,15 +461,20 @@ function ItemModal({
 }
 
 // ---------- 结果页 ----------
-export default function WardrobePage() {
+function WardrobeInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { ready, result, monthAge, profile, setItemStory, reset } = useStore();
-  const [tab, setTab] = useState<Tab>("closet");
+  const initialTab = (searchParams.get("tab") as Tab) || "closet";
+  const [tab, setTab] = useState<Tab>(
+    ["closet", "timeline", "reminders"].includes(initialTab) ? initialTab : "closet"
+  );
   const [selected, setSelected] = useState<ClothingItem | null>(null);
   const [showAllIdle, setShowAllIdle] = useState(false);
   const [gapLabel, setGapLabel] = useState<string | null>(null); // 「可增补」补录弹层
-  // 衣橱图片模式：model=宝宝穿着原图（模特图）/ product=AI 合成商品主图
-  const [viewMode, setViewMode] = useState<"model" | "product">("model");
+  // 衣橱图片模式：默认服饰图（商品图每件唯一，避免同一张生活照在多件卡片重复）；
+  // model=宝宝穿着原图（模特图）/ product=商品图
+  const [viewMode, setViewMode] = useState<"model" | "product">("product");
 
   if (!ready) {
     return <div className="py-20 text-center text-ink-soft">加载中…</div>;
@@ -572,20 +578,9 @@ export default function WardrobePage() {
       {/* ① 衣橱总览 */}
       {tab === "closet" && (
         <section className="space-y-3">
-          {/* 模特图 ⇄ 服饰图：并列分段控件，当前高亮、未选置灰 */}
+          {/* 服饰图 ⇄ 模特图：并列分段控件，当前高亮、未选置灰（默认服饰图） */}
           <div className="flex justify-center">
             <div className="inline-flex rounded-full bg-cream-deep p-1 gap-1">
-              <button
-                type="button"
-                onClick={() => setViewMode("model")}
-                className={`text-xs px-4 py-1.5 rounded-full transition ${
-                  viewMode === "model"
-                    ? "bg-card text-ink font-medium shadow border border-[#f4e7d2]"
-                    : "text-ink-soft/60"
-                }`}
-              >
-                👶 模特图
-              </button>
               <button
                 type="button"
                 onClick={() => setViewMode("product")}
@@ -596,6 +591,17 @@ export default function WardrobePage() {
                 }`}
               >
                 👕 服饰图
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("model")}
+                className={`text-xs px-4 py-1.5 rounded-full transition ${
+                  viewMode === "model"
+                    ? "bg-card text-ink font-medium shadow border border-[#f4e7d2]"
+                    : "text-ink-soft/60"
+                }`}
+              >
+                👶 模特图
               </button>
             </div>
           </div>
@@ -809,32 +815,21 @@ export default function WardrobePage() {
       {/* 补录弹层（可增补 chip 点击唤起） */}
       {gapLabel && <GapUploadModal label={gapLabel} onClose={() => setGapLabel(null)} />}
 
-      {/* 底部固定 tab bar（小程序式）：衣橱 / 时间线 / 提醒 / 我的 */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur border-t border-[#f4e7d2]">
-        <div className="max-w-md mx-auto grid grid-cols-4">
-          {TABS.map((t) => (
-            <button
-              key={t.key}
-              type="button"
-              onClick={() => setTab(t.key)}
-              className="py-2.5 flex flex-col items-center gap-0.5"
-            >
-              <span className="text-lg leading-none">{t.icon}</span>
-              <span
-                className={`text-[10px] ${
-                  tab === t.key ? "text-macaron-pink-deep font-medium" : "text-ink-soft"
-                }`}
-              >
-                {t.label}
-              </span>
-            </button>
-          ))}
-          <Link href="/me" className="py-2.5 flex flex-col items-center gap-0.5">
-            <span className="text-lg leading-none">👤</span>
-            <span className="text-[10px] text-ink-soft">我的</span>
-          </Link>
-        </div>
-      </nav>
+      {/* 底部固定 tab bar（公共组件，portal 悬浮） */}
+      <BottomTab
+        active={tab}
+        onSelect={(k: TabKey) => {
+          if (k !== "me") setTab(k);
+        }}
+      />
     </div>
+  );
+}
+
+export default function WardrobePage() {
+  return (
+    <Suspense fallback={<div className="py-20 text-center text-ink-soft">加载中…</div>}>
+      <WardrobeInner />
+    </Suspense>
   );
 }

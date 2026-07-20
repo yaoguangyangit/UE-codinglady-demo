@@ -4,7 +4,8 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useStore, monthsSince, type BabyProfile } from "@/lib/store";
-import { PRESET_DEMO_IMAGES, PRESET_DEMO_TAKEN_ATS } from "@/lib/preset";
+import { PRESET_RESULT } from "@/lib/preset";
+import BottomTab from "@/components/BottomTab";
 
 const MAX_PHOTOS = 20;
 
@@ -140,7 +141,7 @@ function ProfileForm({ onDone }: { onDone: (p: BabyProfile) => void }) {
 // ---------- 第二屏：相册授权（核心入口） ----------
 export default function Home() {
   const router = useRouter();
-  const { startScan, ready, profile, setProfile, reset } = useStore();
+  const { startScan, ready, profile, setProfile, reset, setResult } = useStore();
   const [reading, setReading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -176,13 +177,13 @@ export default function Home() {
   }
 
   function handleDemo() {
-    // 演示数据与相册授权共用同一份预处理结果（20 张真实照片的完整 AI 分析）
-    startScan(40, PRESET_DEMO_IMAGES, PRESET_DEMO_TAKEN_ATS);
-    router.push("/processing");
+    // 演示数据：直达预制结果页（不经过扫描动画）
+    setResult(PRESET_RESULT);
+    router.push("/wardrobe");
   }
 
   return (
-    <div className="space-y-6 animate-float-up">
+    <div className="space-y-6 animate-float-up pb-20">
       {/* 宝宝信息条 */}
       <section className="card-dream rounded-3xl p-4 flex items-center gap-3">
         <div className="w-14 h-14 rounded-full overflow-hidden bg-gradient-to-br from-macaron-pink-soft to-macaron-blue-soft border border-white shadow-inner shrink-0">
@@ -280,21 +281,14 @@ export default function Home() {
         </Link>
       </p>
 
-      {/* 微信登录入口（小程序定位） */}
-      <p className="text-center">
-        <Link
-          href="/me"
-          className="text-xs text-ink-soft underline underline-offset-4"
-        >
-          👤 微信登录，云端同步衣橱 →
-        </Link>
-      </p>
-
       <p className="text-center text-[11px] text-ink-soft/70 leading-relaxed pt-2">
         照片仅在本机处理，不会上传真实相册；
         <br />
         零次手动录入，衣橱自己长出来。
       </p>
+
+      {/* 底部 tab bar（与衣橱页一致；微信登录在「我的」里） */}
+      <BottomTab active={null} />
     </div>
   );
 }
