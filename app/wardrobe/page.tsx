@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import BottomTab, { type TabKey } from "@/components/BottomTab";
-import { useStore } from "@/lib/store";
+import { useStore, monthsSince } from "@/lib/store";
 import { wardrobeStats, type StatChip } from "@/lib/stats";
 import { svgPhotoPlaceholder, svgProductImage } from "@/lib/product-image";
 import type { ClothingItem, ClothingStatus, PhotoItem } from "@/lib/types";
@@ -565,7 +565,9 @@ function ItemModal({
 function WardrobeInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { ready, result, monthAge, profile, setItemStory, reset } = useStore();
+  const { ready, result, monthAge: storeMonthAge, profile, setItemStory, reset } = useStore();
+  // 月龄始终由宝宝生日推算（演示数据路径不经过 startScan，store 里的 monthAge 是默认值）
+  const monthAge = profile ? monthsSince(profile.birthday) : storeMonthAge;
   const initialTab = (searchParams.get("tab") as Tab) || "closet";
   const [tab, setTab] = useState<Tab>(
     ["closet", "timeline", "reminders"].includes(initialTab) ? initialTab : "closet"
@@ -580,6 +582,9 @@ function WardrobeInner() {
   const [viewMode, setViewMode] = useState<"model" | "product">(
     initialView === "model" ? "model" : "product"
   );
+  // portal 需要挂载后才使用（悬浮加号）
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   if (!ready) {
     return <div className="py-20 text-center text-ink-soft">加载中…</div>;
@@ -592,7 +597,7 @@ function WardrobeInner() {
         <p className="text-xs text-ink-soft">先回去授权一次相册吧</p>
         <button
           type="button"
-          onClick={() => router.push("/")}
+          onClick={() => router.push("/setup")}
           className="px-5 py-2.5 rounded-full bg-macaron-pink text-white text-sm font-medium shadow"
         >
           去建衣橱
@@ -651,7 +656,7 @@ function WardrobeInner() {
             </p>
           </div>
           <Link
-            href="/closet"
+            href="/"
             className="text-[10px] text-ink-soft underline underline-offset-2 shrink-0"
           >
             统计
@@ -986,14 +991,19 @@ function WardrobeInner() {
         }}
       />
 
-      {/* 悬浮加号：随时手动补录 */}
-      <Link
-        href="/"
-        className="fixed right-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-40 w-12 h-12 rounded-full bg-macaron-pink/80 text-white shadow-lg backdrop-blur-sm flex items-center justify-center text-2xl hover:scale-110 active:scale-95 transition"
-        aria-label="手动加入衣橱"
-      >
-        ＋
-      </Link>
+      {/* 悬浮加号：随时手动补录，链接到相册授权页的手动加入衣橱路径
+          （portal 挂 body——transform 祖先会让 fixed 失效） */}
+      {mounted &&
+        createPortal(
+          <Link
+            href="/setup"
+            className="fixed right-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-40 w-12 h-12 rounded-full bg-macaron-pink/70 text-white shadow-lg backdrop-blur-sm flex items-center justify-center text-2xl hover:scale-110 active:scale-95 transition"
+            aria-label="手动加入衣橱"
+          >
+            ＋
+          </Link>,
+          document.body
+        )}
     </div>
   );
 }

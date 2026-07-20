@@ -50,3 +50,6 @@ next-env.d.ts
 
 # kimi-code 调试导出（不进仓库）
 kimi-debug-*.zip
+
+# 调试截图（不进仓库）
+/bug/
