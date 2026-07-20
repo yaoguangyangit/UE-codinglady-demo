@@ -240,11 +240,10 @@ export default function Home() {
         onChange={(e) => handleFiles(e.target.files)}
       />
 
-      {/* 次要入口：导入电商平台订单（仅展示，占位未来能力） */}
-      <button
-        type="button"
-        disabled
-        className="w-full card-dream rounded-3xl p-4 text-left opacity-75 cursor-not-allowed"
+      {/* 次要入口：导入电商平台订单 → 流程介绍页 */}
+      <Link
+        href="/orders"
+        className="w-full card-dream rounded-3xl p-4 text-left hover:scale-[1.01] active:scale-[0.99] transition-transform block"
       >
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-butter to-macaron-pink flex items-center justify-center text-xl text-white shadow">
@@ -256,11 +255,9 @@ export default function Home() {
               阿里系订单主图一键入库，自动补齐衣橱
             </p>
           </div>
-          <span className="text-[10px] px-2 py-0.5 rounded-full bg-butter-soft text-[#b08a2e] shrink-0">
-            即将上线
-          </span>
+          <span className="text-macaron-pink text-xl shrink-0">›</span>
         </div>
-      </button>
+      </Link>
 
       {/* 兜底入口：演示数据（保留，弱化呈现） */}
       <p className="text-center pt-1">
@@ -280,6 +277,16 @@ export default function Home() {
           className="text-xs text-ink-soft underline underline-offset-4"
         >
           💡 你希望拾光的下一个模块是什么？→
+        </Link>
+      </p>
+
+      {/* 微信登录入口（小程序定位） */}
+      <p className="text-center">
+        <Link
+          href="/me"
+          className="text-xs text-ink-soft underline underline-offset-4"
+        >
+          👤 微信登录，云端同步衣橱 →
         </Link>
       </p>
 

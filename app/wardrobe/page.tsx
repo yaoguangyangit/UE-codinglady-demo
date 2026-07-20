@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { wardrobeStats, type StatChip } from "@/lib/stats";
@@ -40,8 +41,16 @@ function sizeNumber(currentSize: string): string {
 const EDIT_SIZES = ["52", "59", "66", "73", "80", "90", "100", "110"];
 const EDIT_TYPES = ["连体衣", "哈衣", "包屁衣", "上衣", "裤子", "外套", "连衣裙", "帽子", "袜子", "鞋子", "配饰"];
 
-// ---------- 统计行（季节/尺码/类型；0 件标"可增补"） ----------
-function StatRow({ title, chips }: { title: string; chips: StatChip[] }) {
+// ---------- 统计行（季节/尺码/类型；0 件标「可增补」可点击补录） ----------
+function StatRow({
+  title,
+  chips,
+  onGapClick,
+}: {
+  title: string;
+  chips: StatChip[];
+  onGapClick?: (c: StatChip) => void;
+}) {
   return (
     <div className="flex items-start gap-2">
       <span className="w-9 shrink-0 pt-1 text-[10px] text-ink-soft">{title}</span>
@@ -55,16 +64,97 @@ function StatRow({ title, chips }: { title: string; chips: StatChip[] }) {
               {c.label} ×{c.count}
             </span>
           ) : (
-            <span
+            <button
               key={c.label}
-              className="text-[10px] px-2 py-0.5 rounded-full border border-dashed border-[#e0cfae] text-ink-soft/70"
+              type="button"
+              onClick={() => onGapClick?.(c)}
+              title="点我补录一件"
+              className="text-[10px] px-2 py-0.5 rounded-full border border-dashed border-macaron-pink text-macaron-pink-deep bg-macaron-pink-soft/40 active:scale-95 transition"
             >
-              {c.label} · 可增补
-            </span>
+              {c.label} · 可增补 ＋
+            </button>
           )
         )}
       </div>
     </div>
+  );
+}
+
+// ---------- 补录弹层（「可增补」点击唤起：引导用户主动输入） ----------
+function GapUploadModal({
+  label,
+  onClose,
+}: {
+  label: string;
+  onClose: () => void;
+}) {
+  const [fileName, setFileName] = useState("");
+  const ref = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
+
+  if (typeof document === "undefined") return null;
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 bg-[#6b5a4e]/40 backdrop-blur-sm flex items-end sm:items-center justify-center"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-md bg-card rounded-t-3xl sm:rounded-3xl p-5 animate-float-up"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {!fileName ? (
+          <>
+            <h3 className="font-display text-lg text-ink">给「{label}」添一件 🌱</h3>
+            <p className="text-xs text-ink-soft mt-2 leading-relaxed">
+              这一类还没有记录。拍一张它现在的样子（或从相册选一张），AI
+              会认出它并补进衣橱。
+            </p>
+            <button
+              type="button"
+              onClick={() => ref.current?.click()}
+              className="w-full mt-4 py-3.5 rounded-2xl bg-macaron-pink text-white text-sm font-medium shadow active:scale-[0.98] transition"
+            >
+              📷 选择一张照片
+            </button>
+            <input
+              ref={ref}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) setFileName(f.name);
+              }}
+            />
+          </>
+        ) : (
+          <>
+            <div className="text-center py-3">
+              <div className="text-3xl">✓</div>
+              <p className="text-sm text-ink mt-2">已收到「{fileName}」</p>
+              <p className="text-[11px] text-ink-soft mt-1 leading-relaxed">
+                AI 会在下次扫描时认出它，补进「{label}」这一类
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-full mt-2 py-3 rounded-2xl bg-card text-ink text-sm border border-[#f4e7d2]"
+            >
+              完成
+            </button>
+          </>
+        )}
+      </div>
+    </div>,
+    document.body
   );
 }
 
@@ -376,6 +466,7 @@ export default function WardrobePage() {
   const [tab, setTab] = useState<Tab>("closet");
   const [selected, setSelected] = useState<ClothingItem | null>(null);
   const [showAllIdle, setShowAllIdle] = useState(false);
+  const [gapLabel, setGapLabel] = useState<string | null>(null); // 「可增补」补录弹层
   // 衣橱图片模式：model=宝宝穿着原图（模特图）/ product=AI 合成商品主图
   const [viewMode, setViewMode] = useState<"model" | "product">("model");
 
@@ -412,13 +503,13 @@ export default function WardrobePage() {
     viewMode === "product" ? it.product_image_url || svgProductImage(it) : it.rep_image_url;
 
   const TABS: { key: Tab; label: string; icon: string }[] = [
-    { key: "closet", label: "衣橱总览", icon: "🧺" },
-    { key: "timeline", label: "成长时间线", icon: "🌱" },
+    { key: "closet", label: "衣橱", icon: "🧺" },
+    { key: "timeline", label: "时间线", icon: "🌱" },
     { key: "reminders", label: "提醒", icon: "🔔" },
   ];
 
   return (
-    <div className="space-y-4 animate-float-up">
+    <div className="space-y-4 animate-float-up pb-20">
       {/* 概要头：宝宝 + 月龄尺码 + 收录统计 */}
       <section className="card-dream rounded-3xl p-4">
         <div className="flex items-center gap-3">
@@ -459,11 +550,15 @@ export default function WardrobePage() {
             重扫
           </button>
         </div>
-        {/* 收录统计：一眼看出哪类需要增补或汰换 */}
+        {/* 收录统计：一眼看出哪类需要增补或汰换（可增补可点击补录） */}
         <div className="mt-3 pt-3 border-t border-[#f7ecd9] space-y-1.5">
-          <StatRow title="季节" chips={stats.seasons} />
-          <StatRow title="尺码" chips={stats.sizes} />
-          <StatRow title={monthAge <= 12 ? "分类" : "类型"} chips={stats.types} />
+          <StatRow title="季节" chips={stats.seasons} onGapClick={(c) => setGapLabel(c.label)} />
+          <StatRow title="尺码" chips={stats.sizes} onGapClick={(c) => setGapLabel(c.label)} />
+          <StatRow
+            title={monthAge <= 12 ? "分类" : "类型"}
+            chips={stats.types}
+            onGapClick={(c) => setGapLabel(c.label)}
+          />
           {stats.retiredCount > 0 && (
             <p className="text-[10px] text-ink-soft/80 pt-1">
               🧺 {stats.retiredCount} 件已退役的衣物，可以洗净收进纪念箱啦
@@ -472,36 +567,37 @@ export default function WardrobePage() {
         </div>
       </section>
 
-      {/* Tab 切换 */}
-      <nav className="grid grid-cols-3 gap-2">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            onClick={() => setTab(t.key)}
-            className={`py-2.5 rounded-2xl text-sm transition-all ${
-              tab === t.key
-                ? "bg-card text-ink font-medium shadow border border-[#f4e7d2]"
-                : "text-ink-soft"
-            }`}
-          >
-            {t.icon} {t.label}
-          </button>
-        ))}
-      </nav>
+      {/* Tab 切换（底部固定 tab bar，小程序式） */}
 
       {/* ① 衣橱总览 */}
       {tab === "closet" && (
         <section className="space-y-3">
-          {/* 原图 ⇄ 商品主图切换（需求：衣橱感） */}
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={() => setViewMode((v) => (v === "model" ? "product" : "model"))}
-              className="text-xs px-4 py-2 rounded-full bg-card text-macaron-pink-deep border border-macaron-pink shadow-sm active:scale-95 transition"
-            >
-              {viewMode === "model" ? "👕 仅查看服饰" : "👶 查看模特图"}
-            </button>
+          {/* 模特图 ⇄ 服饰图：并列分段控件，当前高亮、未选置灰 */}
+          <div className="flex justify-center">
+            <div className="inline-flex rounded-full bg-cream-deep p-1 gap-1">
+              <button
+                type="button"
+                onClick={() => setViewMode("model")}
+                className={`text-xs px-4 py-1.5 rounded-full transition ${
+                  viewMode === "model"
+                    ? "bg-card text-ink font-medium shadow border border-[#f4e7d2]"
+                    : "text-ink-soft/60"
+                }`}
+              >
+                👶 模特图
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("product")}
+                className={`text-xs px-4 py-1.5 rounded-full transition ${
+                  viewMode === "product"
+                    ? "bg-card text-ink font-medium shadow border border-[#f4e7d2]"
+                    : "text-ink-soft/60"
+                }`}
+              >
+                👕 服饰图
+              </button>
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             {items.map((it, idx) => (
@@ -709,6 +805,36 @@ export default function WardrobePage() {
           onStory={setItemStory}
         />
       )}
+
+      {/* 补录弹层（可增补 chip 点击唤起） */}
+      {gapLabel && <GapUploadModal label={gapLabel} onClose={() => setGapLabel(null)} />}
+
+      {/* 底部固定 tab bar（小程序式）：衣橱 / 时间线 / 提醒 / 我的 */}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur border-t border-[#f4e7d2]">
+        <div className="max-w-md mx-auto grid grid-cols-4">
+          {TABS.map((t) => (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => setTab(t.key)}
+              className="py-2.5 flex flex-col items-center gap-0.5"
+            >
+              <span className="text-lg leading-none">{t.icon}</span>
+              <span
+                className={`text-[10px] ${
+                  tab === t.key ? "text-macaron-pink-deep font-medium" : "text-ink-soft"
+                }`}
+              >
+                {t.label}
+              </span>
+            </button>
+          ))}
+          <Link href="/me" className="py-2.5 flex flex-col items-center gap-0.5">
+            <span className="text-lg leading-none">👤</span>
+            <span className="text-[10px] text-ink-soft">我的</span>
+          </Link>
+        </div>
+      </nav>
     </div>
   );
 }

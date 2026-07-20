@@ -173,18 +173,6 @@ function ProcessingInner() {
           <span>
             已分解 {shown}/{total} 张
           </span>
-          {!allShown && (
-            <button
-              type="button"
-              onClick={() => {
-                setFast(true);
-                setShown(total);
-              }}
-              className="underline underline-offset-2"
-            >
-              加速处理 ⏩
-            </button>
-          )}
         </div>
       </section>
 
