@@ -183,14 +183,6 @@ export default function Home() {
 
   return (
     <div className="space-y-6 animate-float-up">
-      {/* 模块标题 */}
-      <section className="text-center pt-2">
-        <p className="text-[10px] tracking-[0.2em] text-ink-soft/70">
-          拾光 · 宝宝衣橱
-        </p>
-        <h1 className="font-display text-2xl text-ink mt-1">🍼 宝宝衣橱</h1>
-      </section>
-
       {/* 宝宝信息条 */}
       <section className="card-dream rounded-3xl p-4 flex items-center gap-3">
         <div className="w-14 h-14 rounded-full overflow-hidden bg-gradient-to-br from-macaron-pink-soft to-macaron-blue-soft border border-white shadow-inner shrink-0">

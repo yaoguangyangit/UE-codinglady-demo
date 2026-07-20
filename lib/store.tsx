@@ -59,6 +59,7 @@ interface StoreContextValue extends StoreData {
   ) => void;
   setResult: (r: ScanResult) => void;
   setItemStory: (id: string, story: string) => void;
+  setItemDetail: (id: string, patch: Partial<ClothingItem>) => void;
   reset: () => void;
 }
 
@@ -151,6 +152,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
+  const setItemDetail = useCallback((id: string, patch: Partial<ClothingItem>) => {
+    setData((d) =>
+      d.result
+        ? {
+            ...d,
+            result: {
+              ...d.result,
+              items: d.result.items.map((it) => (it.id === id ? { ...it, ...patch } : it)),
+            },
+          }
+        : d
+    );
+  }, []);
+
   const reset = useCallback(() => {
     setData(EMPTY);
     if (typeof window !== "undefined") sessionStorage.removeItem(STORAGE_KEY);
@@ -158,7 +173,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   return (
     <StoreContext.Provider
-      value={{ ...data, ready, setProfile, startScan, setResult, setItemStory, reset }}
+      value={{ ...data, ready, setProfile, startScan, setResult, setItemStory, setItemDetail, reset }}
     >
       {children}
     </StoreContext.Provider>

@@ -1,6 +1,6 @@
 // 预处理固化结果（2026-07-19 由 20 张真实照片全链路跑批生成；2026-07-20 升级：
-// 真实商品主图优先 + AI 渲染补缺 + 手工补录 6 件（奶奶手编挎包/小恐龙防晒衣/蝴蝶结发卡/
-// 条纹小兔上衣/运动套装/小鸭遮阳帽），全部本地化于 /demo-product-pic/）。
+// 真实商品主图优先 + AI 渲染补缺 + 手工补录 7 件 + 3 岁生日点（085710 小皇冠条纹衫）+
+// item-24/25 同款合并（黑色九宫格沙滩 T），全部本地化于 /demo-product-pic/）。
 // 两条演示路径（相册授权 / 演示数据）默认使用本结果，保证现场稳定性；
 // 实时链路仍可通过 processing 页 ?live=1 调用。
 // 照片在 public/preset-photos/（隐私红线：不进 git），商品图在 public/demo-product-pic/。
@@ -153,7 +153,7 @@ export const PRESET_RESULT: ScanResult = {
       "image_url": "/preset-photos/20260719-160404.jpeg",
       "taken_at": "2025-10-17",
       "item_ids": [
-        "item-25",
+        "item-24",
         "item-20"
       ],
       "season_hint": "夏"
@@ -216,6 +216,15 @@ export const PRESET_RESULT: ScanResult = {
         "item-33"
       ],
       "season_hint": "夏"
+    },
+    {
+      "id": "photo-22",
+      "image_url": "/preset-photos/20260720-085710.jpeg",
+      "taken_at": "2026-03-19",
+      "item_ids": [
+        "item-35"
+      ],
+      "season_hint": "春"
     }
   ],
   "items": [
@@ -580,33 +589,18 @@ export const PRESET_RESULT: ScanResult = {
     },
     {
       "id": "item-24",
-      "name": "黑色印花上衣",
-      "type": "上衣",
-      "color": "黑色",
-      "pattern": "印花",
-      "size_stage": "90",
-      "wear_count": 1,
-      "first_worn_at": "2025-08-24",
-      "last_worn_at": "2025-08-24",
-      "rep_image_url": "/preset-photos/20260719-160356.jpeg",
-      "status": "idle",
-      "story": "2025年8月24日唯一一次穿着，还没来得及出门，就成为了珍贵的回忆。",
-      "product_image_url": "/demo-product-pic/ai-item-24.jpg"
-    },
-    {
-      "id": "item-25",
-      "name": "黑色卡通上衣",
+      "name": "黑色卡通T恤",
       "type": "上衣",
       "color": "黑色",
       "pattern": "卡通",
       "size_stage": "90",
-      "wear_count": 1,
-      "first_worn_at": "2025-10-17",
+      "wear_count": 2,
+      "first_worn_at": "2025-08-24",
       "last_worn_at": "2025-10-17",
       "rep_image_url": "/preset-photos/20260719-160404.jpeg",
-      "status": "idle",
-      "story": "2025年10月17日唯一一次穿着，还没来得及出门，就成为了珍贵的回忆。",
-      "product_image_url": "/demo-product-pic/ai-item-25.jpg"
+      "status": "active",
+      "story": "胸口的九宫格里装着一整片沙滩，两个夏天都穿过它。",
+      "product_image_url": "/demo-product-pic/ai-item-24.jpg"
     },
     {
       "id": "item-27",
@@ -736,11 +730,11 @@ export const PRESET_RESULT: ScanResult = {
       "pattern": "卡通",
       "size_stage": "90",
       "wear_count": 1,
-      "first_worn_at": "2026-02-15",
-      "last_worn_at": "2026-02-15",
-      "rep_image_url": "/demo-product-pic/20260720-085805.jpeg",
+      "first_worn_at": "2026-03-19",
+      "last_worn_at": "2026-03-19",
+      "rep_image_url": "/preset-photos/20260720-085710.jpeg",
       "product_image_url": "/demo-product-pic/20260720-085805.jpeg",
-      "story": "红白条纹上趴着一只小兔子，2026 年春天的出镜款。",
+      "story": "3 岁生日那天戴上小皇冠，小兔子条纹衫是全场的主角。",
       "status": "active"
     },
     {
@@ -902,13 +896,6 @@ export const PRESET_RESULT: ScanResult = {
       "created_at": "2026-07-19T16:13:32.657Z"
     },
     {
-      "id": "rem-19",
-      "item_id": "item-25",
-      "kind": "idle",
-      "message": "黑色卡通上衣只见过一次——吊牌可能还没拆，这周给宝宝一个上身的机会吧。",
-      "created_at": "2026-07-19T16:13:32.657Z"
-    },
-    {
       "id": "rem-20",
       "item_id": "item-27",
       "kind": "idle",
@@ -969,6 +956,10 @@ export const PRESET_RESULT: ScanResult = {
       "date": "2026-03-31",
       "label": "第一次穿 100 码",
       "size_stage": "100"
+    },
+    {
+      "date": "2026-03-19",
+      "label": "🎂 3 岁生日"
     }
   ],
   "currentSize": "宝宝当前40个月，已经超出标准尺码表范围，但根据穿着记录，90码衣物仍在使用中，建议考虑购买更大尺码（如100码）的衣物"

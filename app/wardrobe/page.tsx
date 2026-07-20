@@ -36,6 +36,10 @@ function sizeNumber(currentSize: string): string {
   return m ? m[1] : currentSize;
 }
 
+/** 详情弹层可编辑字段的候选值 */
+const EDIT_SIZES = ["52", "59", "66", "73", "80", "90", "100", "110"];
+const EDIT_TYPES = ["连体衣", "哈衣", "包屁衣", "上衣", "裤子", "外套", "连衣裙", "帽子", "袜子", "鞋子", "配饰"];
+
 // ---------- 统计行（季节/尺码/类型；0 件标"可增补"） ----------
 function StatRow({ title, chips }: { title: string; chips: StatChip[] }) {
   return (
@@ -84,6 +88,11 @@ function ItemModal({
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
   const [loading, setLoading] = useState(false);
+  const { setItemDetail } = useStore();
+  // 顶部标签编辑态：尺码选择 / 品类·颜色·图案编辑
+  const [editingSize, setEditingSize] = useState(false);
+  const [editingMeta, setEditingMeta] = useState(false);
+  const [metaDraft, setMetaDraft] = useState({ type: item.type, color: item.color, pattern: item.pattern });
 
   // 弹层打开期间锁定背景滚动
   useEffect(() => {
@@ -97,6 +106,14 @@ function ItemModal({
   const wornPhotos = photos
     .filter((p) => p.item_ids.includes(item.id))
     .sort((a, b) => a.taken_at.localeCompare(b.taken_at));
+
+  function saveMeta() {
+    const t = metaDraft.type.trim() || item.type;
+    const c = metaDraft.color.trim() || item.color;
+    const p = metaDraft.pattern.trim() || item.pattern;
+    setItemDetail(item.id, { type: t, color: c, pattern: p, name: `${c}${p}${t}` });
+    setEditingMeta(false);
+  }
 
   // 次要入口：让 AI 换一句（调 /api/bio）
   const regenerate = useCallback(async () => {
@@ -157,20 +174,86 @@ function ItemModal({
           <div className="flex-1 min-w-0">
             <h3 className="font-display text-lg text-ink">{item.name}</h3>
             <div className="flex flex-wrap gap-1.5 mt-1.5">
-              <span
+              <button
+                type="button"
+                onClick={() => setEditingSize((v) => !v)}
+                title="点击修改尺码"
                 className={`text-[10px] px-2 py-0.5 rounded-full ${sizeBadgeCls(item.size_stage)}`}
               >
-                {item.size_stage} 码
-              </span>
+                {item.size_stage} 码 ✎
+              </button>
               <span
                 className={`text-[10px] px-2 py-0.5 rounded-full ${STATUS_META[item.status].cls}`}
               >
                 {STATUS_META[item.status].label}
               </span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-cream-deep text-ink-soft">
-                {item.type} · {item.color} · {item.pattern}
-              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setMetaDraft({ type: item.type, color: item.color, pattern: item.pattern });
+                  setEditingMeta((v) => !v);
+                }}
+                title="点击修改品类/颜色/图案"
+                className="text-[10px] px-2 py-0.5 rounded-full bg-cream-deep text-ink-soft"
+              >
+                {item.type} · {item.color} · {item.pattern} ✎
+              </button>
             </div>
+            {/* 尺码选择 */}
+            {editingSize && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {EDIT_SIZES.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => {
+                      setItemDetail(item.id, { size_stage: s });
+                      setEditingSize(false);
+                    }}
+                    className={`text-[10px] px-2 py-0.5 rounded-full border ${
+                      s === item.size_stage
+                        ? "bg-macaron-blue text-white border-macaron-blue"
+                        : "bg-white/70 text-ink-soft border-[#e8d9c3]"
+                    }`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
+            {/* 品类/颜色/图案编辑 */}
+            {editingMeta && (
+              <div className="mt-2 flex items-center gap-1.5">
+                <select
+                  value={metaDraft.type}
+                  onChange={(e) => setMetaDraft((d) => ({ ...d, type: e.target.value }))}
+                  className="text-[11px] rounded-lg bg-white/80 border border-[#e8d9c3] px-1.5 py-1 text-ink"
+                >
+                  {EDIT_TYPES.map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+                <input
+                  value={metaDraft.color}
+                  onChange={(e) => setMetaDraft((d) => ({ ...d, color: e.target.value }))}
+                  placeholder="颜色"
+                  className="w-14 text-[11px] rounded-lg bg-white/80 border border-[#e8d9c3] px-1.5 py-1 text-ink"
+                />
+                <input
+                  value={metaDraft.pattern}
+                  onChange={(e) => setMetaDraft((d) => ({ ...d, pattern: e.target.value }))}
+                  placeholder="图案"
+                  className="w-14 text-[11px] rounded-lg bg-white/80 border border-[#e8d9c3] px-1.5 py-1 text-ink"
+                />
+                <button
+                  type="button"
+                  onClick={saveMeta}
+                  className="text-[11px] px-2.5 py-1 rounded-full bg-macaron-pink text-white"
+                >
+                  保存
+                </button>
+              </div>
+            )}
           </div>
           <button
             type="button"
@@ -263,7 +346,13 @@ function ItemModal({
                 <img
                   src={p.image_url}
                   alt={p.taken_at}
-                  className="w-16 h-16 rounded-xl object-cover border border-[#f4e7d2]"
+                  title="点击设为封面图"
+                  onClick={() => setItemDetail(item.id, { rep_image_url: p.image_url })}
+                  className={`w-16 h-16 rounded-xl object-cover border cursor-pointer active:scale-95 transition ${
+                    p.image_url === item.rep_image_url
+                      ? "border-macaron-pink ring-2 ring-macaron-pink"
+                      : "border-[#f4e7d2]"
+                  }`}
                   onError={(e) => {
                     const el = e.currentTarget;
                     if (!el.src.startsWith("data:")) el.src = svgPhotoPlaceholder(p.taken_at);
@@ -286,6 +375,7 @@ export default function WardrobePage() {
   const { ready, result, monthAge, profile, setItemStory, reset } = useStore();
   const [tab, setTab] = useState<Tab>("closet");
   const [selected, setSelected] = useState<ClothingItem | null>(null);
+  const [showAllIdle, setShowAllIdle] = useState(false);
   // 衣橱图片模式：model=宝宝穿着原图（模特图）/ product=AI 合成商品主图
   const [viewMode, setViewMode] = useState<"model" | "product">("model");
 
@@ -559,22 +649,33 @@ export default function WardrobePage() {
           <div className="card-dream rounded-3xl p-4">
             <p className="text-sm font-medium text-ink mb-2">🏷 闲置清单</p>
             {idleList.length ? (
-              <ul className="space-y-2">
-                {idleList.map((r) => (
-                  <li key={r.id} className="text-xs text-ink leading-relaxed">
-                    <button
-                      type="button"
-                      className="text-left"
-                      onClick={() => {
-                        const it = itemOf(r.item_id);
-                        if (it) setSelected(it);
-                      }}
-                    >
-                      {r.message}
-                    </button>
-                  </li>
-                ))}
-              </ul>
+              <>
+                <ul className="space-y-2">
+                  {(showAllIdle ? idleList : idleList.slice(0, 3)).map((r) => (
+                    <li key={r.id} className="text-xs text-ink leading-relaxed">
+                      <button
+                        type="button"
+                        className="text-left"
+                        onClick={() => {
+                          const it = itemOf(r.item_id);
+                          if (it) setSelected(it);
+                        }}
+                      >
+                        {r.message}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+                {idleList.length > 3 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAllIdle((v) => !v)}
+                    className="mt-2 text-[11px] text-macaron-blue-deep underline underline-offset-2"
+                  >
+                    {showAllIdle ? "收起 ↑" : `更多（还有 ${idleList.length - 3} 条）↓`}
+                  </button>
+                )}
+              </>
             ) : (
               <p className="text-xs text-ink-soft">没有闲置，件件都上场，厉害的妈妈！</p>
             )}
