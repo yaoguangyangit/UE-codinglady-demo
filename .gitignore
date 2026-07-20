@@ -41,6 +41,9 @@ yarn-error.log*
 /demo image/
 /public/preset-photos/
 
+# 商品图素材库（运行时服务用 public/demo-product-pic/）
+/demo product pic/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

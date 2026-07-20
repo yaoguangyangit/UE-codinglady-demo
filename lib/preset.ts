@@ -1,8 +1,10 @@
 // 预处理固化结果（2026-07-19 由 20 张真实照片经 GLM-4V 分解 → 归并 → GLM-4 推演
-// → GLM-4 故事 → CogView 商品图 全链路跑批生成）。
+// → GLM-4 故事 → CogView 商品图 全链路跑批生成；2026-07-20 商品图升级：真实商品主图优先，
+// 缺失项用 AI 渲染图补齐，全部本地化于 /demo-product-pic/）。
 // 两条演示路径（相册授权 / 演示数据）默认使用本结果，保证现场稳定性；
 // 实时链路仍可通过 processing 页 ?live=1 调用。
-// 照片文件在 public/preset-photos/（隐私红线：不进 git，线上 404 时前端自动回落 SVG 占位）。
+// 照片文件在 public/preset-photos/、商品图在 public/demo-product-pic/
+// （隐私红线：真实宝宝照片不进 git；商品图为公开电商图+AI 渲染图）。
 import type { ScanResult } from "./store";
 
 export const PRESET_RESULT: ScanResult = {
@@ -220,7 +222,7 @@ export const PRESET_RESULT: ScanResult = {
       "rep_image_url": "/preset-photos/20260719-160301.jpeg",
       "status": "active",
       "story": "2024年2月29日首次穿上，在4月23日最后一次出现，陪伴了两个重要时刻。",
-      "product_image_url": "https://maas-watermark-prod-new.cn-wlcb.ufileos.com/202607200013323ed46afb9c574fd3_watermark.png?UCloudPublicKey=TOKEN_6df395df-5d8c-4f69-90f8-a4fe46088958&Signature=RAp%2FAQ3PPHPyw0uVDknKunMlgJg%3D&Expires=1785082420"
+      "product_image_url": "/demo-product-pic/20260720-085750.png"
     },
     {
       "id": "item-7",
@@ -234,7 +236,8 @@ export const PRESET_RESULT: ScanResult = {
       "last_worn_at": "2025-05-07",
       "rep_image_url": "/preset-photos/20260719-160342.jpeg",
       "status": "active",
-      "story": "2024年2月29日首次穿上，在2025年5月7日最后一次出现，跨越了一年多的时光。"
+      "story": "2024年2月29日首次穿上，在2025年5月7日最后一次出现，跨越了一年多的时光。",
+      "product_image_url": "/demo-product-pic/20260720-085838.jpeg"
     },
     {
       "id": "item-8",
@@ -249,7 +252,7 @@ export const PRESET_RESULT: ScanResult = {
       "rep_image_url": "/preset-photos/20260719-160425.jpeg",
       "status": "active",
       "story": "2024年4月23日首次穿上，在2026年3月29日最后一次出现，见证了近两年的成长。",
-      "product_image_url": "https://maas-watermark-prod-new.cn-wlcb.ufileos.com/20260720001340b9b30e23aaa546c0_watermark.png?UCloudPublicKey=TOKEN_6df395df-5d8c-4f69-90f8-a4fe46088958&Signature=gMPWHqjtlWjwwcKXwxiYIfIj300%3D&Expires=1785082427"
+      "product_image_url": "/demo-product-pic/ai-item-8.jpg"
     },
     {
       "id": "item-10",
@@ -264,7 +267,7 @@ export const PRESET_RESULT: ScanResult = {
       "rep_image_url": "/preset-photos/20260719-160420.jpeg",
       "status": "active",
       "story": "2024年4月23日首次穿上，在2026年2月2日最后一次出现，陪伴了多个重要场合。",
-      "product_image_url": "https://maas-watermark-prod-new.cn-wlcb.ufileos.com/20260720001347798ee49e023340d3_watermark.png?UCloudPublicKey=TOKEN_6df395df-5d8c-4f69-90f8-a4fe46088958&Signature=zP6wrhO%2F9x2rAG4kWmpB6o6oM64%3D&Expires=1785082435"
+      "product_image_url": "/demo-product-pic/ai-item-10.jpg"
     },
     {
       "id": "item-20",
@@ -279,7 +282,7 @@ export const PRESET_RESULT: ScanResult = {
       "rep_image_url": "/preset-photos/20260719-160404.jpeg",
       "status": "active",
       "story": "生日前一周专门穿上的，像是专门为这个日子准备的，记录了特别的时刻。",
-      "product_image_url": "https://maas-watermark-prod-new.cn-wlcb.ufileos.com/2026072000135532858e13465449fc_watermark.png?UCloudPublicKey=TOKEN_6df395df-5d8c-4f69-90f8-a4fe46088958&Signature=gx5dTe8JDDi8NRGdq9lItYOBwp4%3D&Expires=1785082444"
+      "product_image_url": "/demo-product-pic/ai-item-20.jpg"
     },
     {
       "id": "item-21",
@@ -294,7 +297,7 @@ export const PRESET_RESULT: ScanResult = {
       "rep_image_url": "/preset-photos/20260719-160425.jpeg",
       "status": "active",
       "story": "2025年5月7日首次穿上，在2026年3月29日最后一次出现，陪伴了将近一年的时光。",
-      "product_image_url": "https://maas-watermark-prod-new.cn-wlcb.ufileos.com/2026072000140411db51b3ba664838_watermark.png?UCloudPublicKey=TOKEN_6df395df-5d8c-4f69-90f8-a4fe46088958&Signature=5st0psGx6cVGwetfjD50NoM2xkE%3D&Expires=1785082451"
+      "product_image_url": "/demo-product-pic/20260720-085835.jpeg"
     },
     {
       "id": "item-26",
@@ -308,7 +311,8 @@ export const PRESET_RESULT: ScanResult = {
       "last_worn_at": "2026-07-15",
       "rep_image_url": "/preset-photos/20260719-160434.jpeg",
       "status": "active",
-      "story": "2025年12月10日首次穿上，在2026年7月15日最后一次出现，见证了冬春交替。"
+      "story": "2025年12月10日首次穿上，在2026年7月15日最后一次出现，见证了冬春交替。",
+      "product_image_url": "/demo-product-pic/20260720-085759.jpeg"
     },
     {
       "id": "item-1",
@@ -323,7 +327,7 @@ export const PRESET_RESULT: ScanResult = {
       "rep_image_url": "/preset-photos/20260719-160222.jpeg",
       "status": "retired",
       "story": "2024年6月16日唯一一次穿着，还没来得及出门，就成为了珍贵的回忆。",
-      "product_image_url": "https://maas-watermark-prod-new.cn-wlcb.ufileos.com/202607200014119e8040f643db4d3a_watermark.png?UCloudPublicKey=TOKEN_6df395df-5d8c-4f69-90f8-a4fe46088958&Signature=OaokSEEQUuPUh0OtgKpTTZZU3Pc%3D&Expires=1785082459"
+      "product_image_url": "/demo-product-pic/20260720-085754.jpeg"
     },
     {
       "id": "item-2",
@@ -338,7 +342,7 @@ export const PRESET_RESULT: ScanResult = {
       "rep_image_url": "/preset-photos/20260719-160243.jpeg",
       "status": "retired",
       "story": "2023年11月12日唯一一次穿着，还没来得及出门，就成为了珍贵的回忆。",
-      "product_image_url": "https://maas-watermark-prod-new.cn-wlcb.ufileos.com/2026072000141997d9a0c4b3f7481a_watermark.png?UCloudPublicKey=TOKEN_6df395df-5d8c-4f69-90f8-a4fe46088958&Signature=arNMoTdJjKNF93L1Q0P4ICGYHKw%3D&Expires=1785082467"
+      "product_image_url": "/demo-product-pic/20260720-085813.jpeg"
     },
     {
       "id": "item-3",
@@ -353,7 +357,7 @@ export const PRESET_RESULT: ScanResult = {
       "rep_image_url": "/preset-photos/20260719-160243.jpeg",
       "status": "retired",
       "story": "2023年11月12日唯一一次穿着，还没来得及出门，就成为了珍贵的回忆。",
-      "product_image_url": "https://maas-watermark-prod-new.cn-wlcb.ufileos.com/20260720001427fe98d2c1d31a4015_watermark.png?UCloudPublicKey=TOKEN_6df395df-5d8c-4f69-90f8-a4fe46088958&Signature=KFoFnC%2F3W9awhQwFUh4dUCAUaHs%3D&Expires=1785082474"
+      "product_image_url": "/demo-product-pic/ai-item-3.jpg"
     },
     {
       "id": "item-4",
@@ -368,7 +372,7 @@ export const PRESET_RESULT: ScanResult = {
       "rep_image_url": "/preset-photos/20260719-160250.jpeg",
       "status": "idle",
       "story": "2024年1月5日唯一一次穿着，还没来得及出门，就成为了珍贵的回忆。",
-      "product_image_url": "https://maas-watermark-prod-new.cn-wlcb.ufileos.com/20260720001435f2e16373808e4131_watermark.png?UCloudPublicKey=TOKEN_6df395df-5d8c-4f69-90f8-a4fe46088958&Signature=JcJhHKrZnpmMcH8vyj9gWAIx9MM%3D&Expires=1785082482"
+      "product_image_url": "/demo-product-pic/20260720-085809.jpeg"
     },
     {
       "id": "item-5",
@@ -383,7 +387,7 @@ export const PRESET_RESULT: ScanResult = {
       "rep_image_url": "/preset-photos/20260719-160250.jpeg",
       "status": "idle",
       "story": "2024年1月5日唯一一次穿着，还没来得及出门，就成为了珍贵的回忆。",
-      "product_image_url": "https://maas-watermark-prod-new.cn-wlcb.ufileos.com/2026072000144215d0f0aec5224f56_watermark.png?UCloudPublicKey=TOKEN_6df395df-5d8c-4f69-90f8-a4fe46088958&Signature=7MO%2BLOKJr2%2BQDZDtNfIkAPWnBMk%3D&Expires=1785082490"
+      "product_image_url": "/demo-product-pic/ai-item-5.jpg"
     },
     {
       "id": "item-9",
@@ -412,7 +416,7 @@ export const PRESET_RESULT: ScanResult = {
       "rep_image_url": "/preset-photos/20260719-160306.jpeg",
       "status": "idle",
       "story": "2026年2月2日唯一一次穿着，还没来得及出门，就成为了珍贵的回忆。",
-      "product_image_url": "https://maas-watermark-prod-new.cn-wlcb.ufileos.com/20260720001450ed50b97ac2af4c19_watermark.png?UCloudPublicKey=TOKEN_6df395df-5d8c-4f69-90f8-a4fe46088958&Signature=4gnrCWYxmKM2sWXC6u6usiOzgRs%3D&Expires=1785082498"
+      "product_image_url": "/demo-product-pic/ai-item-11.jpg"
     },
     {
       "id": "item-12",
@@ -427,7 +431,7 @@ export const PRESET_RESULT: ScanResult = {
       "rep_image_url": "/preset-photos/20260719-160311.jpeg",
       "status": "idle",
       "story": "2024年8月9日唯一一次穿着，还没来得及出门，就成为了珍贵的回忆。",
-      "product_image_url": "https://maas-watermark-prod-new.cn-wlcb.ufileos.com/20260720001458464682d354334f26_watermark.png?UCloudPublicKey=TOKEN_6df395df-5d8c-4f69-90f8-a4fe46088958&Signature=h27wivVP%2BmBp4mbIiYbcbnOenrw%3D&Expires=1785082506"
+      "product_image_url": "/demo-product-pic/ai-item-12.jpg"
     },
     {
       "id": "item-13",
@@ -442,7 +446,7 @@ export const PRESET_RESULT: ScanResult = {
       "rep_image_url": "/preset-photos/20260719-160317.jpeg",
       "status": "idle",
       "story": "2024年10月2日唯一一次穿着，还没来得及出门，就成为了珍贵的回忆。",
-      "product_image_url": "https://maas-watermark-prod-new.cn-wlcb.ufileos.com/2026072000150626fb89d967c94aa6_watermark.png?UCloudPublicKey=TOKEN_6df395df-5d8c-4f69-90f8-a4fe46088958&Signature=fPJQqfta9jpcquJmqRAD%2Bvm%2BCo8%3D&Expires=1785082517"
+      "product_image_url": "/demo-product-pic/ai-item-13.jpg"
     },
     {
       "id": "item-14",
@@ -457,7 +461,7 @@ export const PRESET_RESULT: ScanResult = {
       "rep_image_url": "/preset-photos/20260719-160317.jpeg",
       "status": "idle",
       "story": "2024年10月2日唯一一次穿着，还没来得及出门，就成为了珍贵的回忆。",
-      "product_image_url": "https://maas-watermark-prod-new.cn-wlcb.ufileos.com/20260720001517ae84365743014da9_watermark.png?UCloudPublicKey=TOKEN_6df395df-5d8c-4f69-90f8-a4fe46088958&Signature=kvIfbz42WxMXF5iRgOqjqhbtv6k%3D&Expires=1785082525"
+      "product_image_url": "/demo-product-pic/ai-item-14.jpg"
     },
     {
       "id": "item-15",
@@ -471,7 +475,8 @@ export const PRESET_RESULT: ScanResult = {
       "last_worn_at": "2024-11-26",
       "rep_image_url": "/preset-photos/20260719-160322.jpeg",
       "status": "idle",
-      "story": "2024年11月26日唯一一次穿着，还没来得及出门，就成为了珍贵的回忆。"
+      "story": "2024年11月26日唯一一次穿着，还没来得及出门，就成为了珍贵的回忆。",
+      "product_image_url": "/demo-product-pic/20260720-085745.png"
     },
     {
       "id": "item-16",
@@ -486,7 +491,7 @@ export const PRESET_RESULT: ScanResult = {
       "rep_image_url": "/preset-photos/20260719-160329.jpeg",
       "status": "idle",
       "story": "2025年1月19日唯一一次穿着，还没来得及出门，就成为了珍贵的回忆。",
-      "product_image_url": "https://maas-watermark-prod-new.cn-wlcb.ufileos.com/20260720001525cbd060d5146e4c1f_watermark.png?UCloudPublicKey=TOKEN_6df395df-5d8c-4f69-90f8-a4fe46088958&Signature=n6VAfziWtpcv%2BvVAhLDnpPpPK4o%3D&Expires=1785082535"
+      "product_image_url": "/demo-product-pic/ai-item-16.jpg"
     },
     {
       "id": "item-17",
@@ -501,7 +506,7 @@ export const PRESET_RESULT: ScanResult = {
       "rep_image_url": "/preset-photos/20260719-160329.jpeg",
       "status": "idle",
       "story": "2025年1月19日唯一一次穿着，还没来得及出门，就成为了珍贵的回忆。",
-      "product_image_url": "https://maas-watermark-prod-new.cn-wlcb.ufileos.com/20260720001535990951e9dd924052_watermark.png?UCloudPublicKey=TOKEN_6df395df-5d8c-4f69-90f8-a4fe46088958&Signature=q24hWnCIWf%2BYtJ95VKrvUDteWlA%3D&Expires=1785082543"
+      "product_image_url": "/demo-product-pic/ai-item-17.jpg"
     },
     {
       "id": "item-18",
@@ -516,7 +521,7 @@ export const PRESET_RESULT: ScanResult = {
       "rep_image_url": "/preset-photos/20260719-160329.jpeg",
       "status": "idle",
       "story": "2025年1月19日唯一一次穿着，还没来得及出门，就成为了珍贵的回忆。",
-      "product_image_url": "https://maas-watermark-prod-new.cn-wlcb.ufileos.com/20260720001543199ba15431004cda_watermark.png?UCloudPublicKey=TOKEN_6df395df-5d8c-4f69-90f8-a4fe46088958&Signature=7N2U%2BqC95HdXEk2Ki7U3RzHosFE%3D&Expires=1785082555"
+      "product_image_url": "/demo-product-pic/ai-item-18.jpg"
     },
     {
       "id": "item-19",
@@ -531,7 +536,7 @@ export const PRESET_RESULT: ScanResult = {
       "rep_image_url": "/preset-photos/20260719-160335.jpeg",
       "status": "idle",
       "story": "生日前一周专门穿上的，像是专门为这个日子准备的，记录了特别的时刻。",
-      "product_image_url": "https://maas-watermark-prod-new.cn-wlcb.ufileos.com/20260720001555b8b1dfde2a0848dc_watermark.png?UCloudPublicKey=TOKEN_6df395df-5d8c-4f69-90f8-a4fe46088958&Signature=w%2B2sQCaBH33Y0jVgUvtsfU0wTJQ%3D&Expires=1785082565"
+      "product_image_url": "/demo-product-pic/20260720-085802.jpeg"
     },
     {
       "id": "item-22",
@@ -545,7 +550,8 @@ export const PRESET_RESULT: ScanResult = {
       "last_worn_at": "2025-07-01",
       "rep_image_url": "/preset-photos/20260719-160348.jpeg",
       "status": "idle",
-      "story": "2025年7月1日唯一一次穿着，还没来得及出门，就成为了珍贵的回忆。"
+      "story": "2025年7月1日唯一一次穿着，还没来得及出门，就成为了珍贵的回忆。",
+      "product_image_url": "/demo-product-pic/20260720-085820.jpeg"
     },
     {
       "id": "item-23",
@@ -560,7 +566,7 @@ export const PRESET_RESULT: ScanResult = {
       "rep_image_url": "/preset-photos/20260719-160348.jpeg",
       "status": "idle",
       "story": "2025年7月1日唯一一次穿着，还没来得及出门，就成为了珍贵的回忆。",
-      "product_image_url": "https://maas-watermark-prod-new.cn-wlcb.ufileos.com/2026072000160574785d2bbcaf4948_watermark.png?UCloudPublicKey=TOKEN_6df395df-5d8c-4f69-90f8-a4fe46088958&Signature=1nDKJ7B%2FNssq84K6f%2B2AgtHfDPc%3D&Expires=1785082573"
+      "product_image_url": "/demo-product-pic/ai-item-23.jpg"
     },
     {
       "id": "item-24",
@@ -575,7 +581,7 @@ export const PRESET_RESULT: ScanResult = {
       "rep_image_url": "/preset-photos/20260719-160356.jpeg",
       "status": "idle",
       "story": "2025年8月24日唯一一次穿着，还没来得及出门，就成为了珍贵的回忆。",
-      "product_image_url": "https://maas-watermark-prod-new.cn-wlcb.ufileos.com/2026072000161493ebfc67b1aa4979_watermark.png?UCloudPublicKey=TOKEN_6df395df-5d8c-4f69-90f8-a4fe46088958&Signature=j38xN9o7limVFTFN2L2%2F1I6rQPY%3D&Expires=1785082581"
+      "product_image_url": "/demo-product-pic/ai-item-24.jpg"
     },
     {
       "id": "item-25",
@@ -590,7 +596,7 @@ export const PRESET_RESULT: ScanResult = {
       "rep_image_url": "/preset-photos/20260719-160404.jpeg",
       "status": "idle",
       "story": "2025年10月17日唯一一次穿着，还没来得及出门，就成为了珍贵的回忆。",
-      "product_image_url": "https://maas-watermark-prod-new.cn-wlcb.ufileos.com/20260720001621b3f61bf7f9a543da_watermark.png?UCloudPublicKey=TOKEN_6df395df-5d8c-4f69-90f8-a4fe46088958&Signature=SkZXAkqBgOAzq7NPBCGk5BPU3CM%3D&Expires=1785082589"
+      "product_image_url": "/demo-product-pic/ai-item-25.jpg"
     },
     {
       "id": "item-27",
@@ -605,7 +611,7 @@ export const PRESET_RESULT: ScanResult = {
       "rep_image_url": "/preset-photos/20260719-160411.jpeg",
       "status": "idle",
       "story": "2025年12月10日唯一一次穿着，还没来得及出门，就成为了珍贵的回忆。",
-      "product_image_url": "https://maas-watermark-prod-new.cn-wlcb.ufileos.com/202607200016290ee8238cd5a44598_watermark.png?UCloudPublicKey=TOKEN_6df395df-5d8c-4f69-90f8-a4fe46088958&Signature=8NcL57lapxtBRibb4bNYCa8l84g%3D&Expires=1785082597"
+      "product_image_url": "/demo-product-pic/ai-item-27.jpg"
     },
     {
       "id": "item-28",
@@ -620,7 +626,7 @@ export const PRESET_RESULT: ScanResult = {
       "rep_image_url": "/preset-photos/20260719-160420.jpeg",
       "status": "idle",
       "story": "从2026-02-02到2026-02-02，它陪宝宝留下了1次笑脸。",
-      "product_image_url": "https://maas-watermark-prod-new.cn-wlcb.ufileos.com/202607200017070c59c1c4b6f14534_watermark.png?UCloudPublicKey=TOKEN_6df395df-5d8c-4f69-90f8-a4fe46088958&Signature=GsdyheWrNqetbFFN0WaJVzll768%3D&Expires=1785082635"
+      "product_image_url": "/demo-product-pic/ai-item-28.jpg"
     },
     {
       "id": "item-29",
@@ -635,7 +641,7 @@ export const PRESET_RESULT: ScanResult = {
       "rep_image_url": "/preset-photos/20260719-160420.jpeg",
       "status": "idle",
       "story": "2026年2月2日唯一一次穿着，还没来得及出门，就成为了珍贵的回忆。",
-      "product_image_url": "https://maas-watermark-prod-new.cn-wlcb.ufileos.com/20260720001637036beb0ea4744226_watermark.png?UCloudPublicKey=TOKEN_6df395df-5d8c-4f69-90f8-a4fe46088958&Signature=tUewOSgOACyDO2lEk4e2lohcQls%3D&Expires=1785082607"
+      "product_image_url": "/demo-product-pic/ai-item-29.jpg"
     },
     {
       "id": "item-30",
@@ -650,7 +656,7 @@ export const PRESET_RESULT: ScanResult = {
       "rep_image_url": "/preset-photos/20260719-160429.jpeg",
       "status": "idle",
       "story": "2026年5月22日唯一一次穿着，还没来得及出门，就成为了珍贵的回忆。",
-      "product_image_url": "https://maas-watermark-prod-new.cn-wlcb.ufileos.com/20260720001647535493f8d4bc42fd_watermark.png?UCloudPublicKey=TOKEN_6df395df-5d8c-4f69-90f8-a4fe46088958&Signature=924MdOtdZJQFHqzoR6bLKcBOhdI%3D&Expires=1785082614"
+      "product_image_url": "/demo-product-pic/ai-item-30.jpg"
     },
     {
       "id": "item-31",
@@ -665,7 +671,7 @@ export const PRESET_RESULT: ScanResult = {
       "rep_image_url": "/preset-photos/20260719-160429.jpeg",
       "status": "idle",
       "story": "2026年5月22日唯一一次穿着，还没来得及出门，就成为了珍贵的回忆。",
-      "product_image_url": "https://maas-watermark-prod-new.cn-wlcb.ufileos.com/20260720001654a3161afce2d949f9_watermark.png?UCloudPublicKey=TOKEN_6df395df-5d8c-4f69-90f8-a4fe46088958&Signature=FijoJfB61I%2FWEaaBxJpPTkPDzVY%3D&Expires=1785082626"
+      "product_image_url": "/demo-product-pic/ai-item-31.jpg"
     }
   ],
   "reminders": [
