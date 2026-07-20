@@ -19,8 +19,8 @@ export default function ConceptLayout({
     <div className="space-y-5 animate-float-up">
       {/* 返回 + 状态 */}
       <div className="flex items-center gap-2">
-        <Link href="/" className="text-sm text-ink-soft">
-          ‹ 简居
+        <Link href="/modules" className="text-sm text-ink-soft">
+          ‹ 拾光
         </Link>
         <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-butter-soft text-[#b08a2e]">
           Coming 2026 · 概念预览
