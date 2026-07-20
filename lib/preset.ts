@@ -1,10 +1,9 @@
-// 预处理固化结果（2026-07-19 由 20 张真实照片经 GLM-4V 分解 → 归并 → GLM-4 推演
-// → GLM-4 故事 → CogView 商品图 全链路跑批生成；2026-07-20 商品图升级：真实商品主图优先，
-// 缺失项用 AI 渲染图补齐，全部本地化于 /demo-product-pic/）。
+// 预处理固化结果（2026-07-19 由 20 张真实照片全链路跑批生成；2026-07-20 升级：
+// 真实商品主图优先 + AI 渲染补缺 + 手工补录 6 件（奶奶手编挎包/小恐龙防晒衣/蝴蝶结发卡/
+// 条纹小兔上衣/运动套装/小鸭遮阳帽），全部本地化于 /demo-product-pic/）。
 // 两条演示路径（相册授权 / 演示数据）默认使用本结果，保证现场稳定性；
 // 实时链路仍可通过 processing 页 ?live=1 调用。
-// 照片文件在 public/preset-photos/、商品图在 public/demo-product-pic/
-// （隐私红线：真实宝宝照片不进 git；商品图为公开电商图+AI 渲染图）。
+// 照片在 public/preset-photos/（隐私红线：不进 git），商品图在 public/demo-product-pic/。
 import type { ScanResult } from "./store";
 
 export const PRESET_RESULT: ScanResult = {
@@ -65,7 +64,8 @@ export const PRESET_RESULT: ScanResult = {
       "image_url": "/preset-photos/20260719-160306.jpeg",
       "taken_at": "2024-06-16",
       "item_ids": [
-        "item-11"
+        "item-11",
+        "item-34"
       ],
       "season_hint": "夏"
     },
@@ -74,7 +74,8 @@ export const PRESET_RESULT: ScanResult = {
       "image_url": "/preset-photos/20260719-160311.jpeg",
       "taken_at": "2024-08-09",
       "item_ids": [
-        "item-12"
+        "item-12",
+        "item-32"
       ],
       "season_hint": "夏"
     },
@@ -206,6 +207,15 @@ export const PRESET_RESULT: ScanResult = {
         "item-26"
       ],
       "season_hint": "春"
+    },
+    {
+      "id": "photo-21",
+      "image_url": "/preset-photos/20260720-085641.jpeg",
+      "taken_at": "2026-05-15",
+      "item_ids": [
+        "item-33"
+      ],
+      "season_hint": "夏"
     }
   ],
   "items": [
@@ -672,6 +682,96 @@ export const PRESET_RESULT: ScanResult = {
       "status": "idle",
       "story": "2026年5月22日唯一一次穿着，还没来得及出门，就成为了珍贵的回忆。",
       "product_image_url": "/demo-product-pic/ai-item-31.jpg"
+    },
+    {
+      "id": "item-32",
+      "name": "橘色手工编织挎包",
+      "type": "配饰",
+      "color": "橘色",
+      "pattern": "条纹",
+      "size_stage": "59",
+      "wear_count": 1,
+      "first_worn_at": "2024-08-09",
+      "last_worn_at": "2024-08-09",
+      "rep_image_url": "/preset-photos/20260719-160311.jpeg",
+      "product_image_url": "/demo-product-pic/ai-item-32.jpg",
+      "story": "奶奶亲手钩的它，橘色小包包装过出门的每一样小零碎。",
+      "status": "retired"
+    },
+    {
+      "id": "item-33",
+      "name": "白色卡通防晒衣",
+      "type": "外套",
+      "color": "白色",
+      "pattern": "卡通",
+      "size_stage": "100",
+      "wear_count": 1,
+      "first_worn_at": "2026-05-15",
+      "last_worn_at": "2026-05-15",
+      "rep_image_url": "/preset-photos/20260720-085641.jpeg",
+      "product_image_url": "/demo-product-pic/ai-item-33.jpg",
+      "story": "2026 年初夏，小恐龙第一次陪宝宝出门晒太阳。",
+      "status": "active"
+    },
+    {
+      "id": "item-34",
+      "name": "蓝色蝴蝶结发卡",
+      "type": "配饰",
+      "color": "蓝色",
+      "pattern": "纯色",
+      "size_stage": "73",
+      "wear_count": 1,
+      "first_worn_at": "2024-10-02",
+      "last_worn_at": "2024-10-02",
+      "rep_image_url": "/preset-photos/20260719-160306.jpeg",
+      "product_image_url": "/demo-product-pic/ai-item-34.jpg",
+      "story": "艺术照那天别在头上的小蓝花，照片里都是春天的样子。",
+      "status": "retired"
+    },
+    {
+      "id": "item-35",
+      "name": "红白条纹卡通上衣",
+      "type": "上衣",
+      "color": "红白",
+      "pattern": "卡通",
+      "size_stage": "90",
+      "wear_count": 1,
+      "first_worn_at": "2026-02-15",
+      "last_worn_at": "2026-02-15",
+      "rep_image_url": "/demo-product-pic/20260720-085805.jpeg",
+      "product_image_url": "/demo-product-pic/20260720-085805.jpeg",
+      "story": "红白条纹上趴着一只小兔子，2026 年春天的出镜款。",
+      "status": "active"
+    },
+    {
+      "id": "item-36",
+      "name": "深藏青运动套装",
+      "type": "外套",
+      "color": "深藏青",
+      "pattern": "条纹",
+      "size_stage": "100",
+      "wear_count": 1,
+      "first_worn_at": "2026-03-31",
+      "last_worn_at": "2026-03-31",
+      "rep_image_url": "/demo-product-pic/20260720-085817.png",
+      "product_image_url": "/demo-product-pic/20260720-085817.png",
+      "story": "深藏青的运动套装，是随时准备出门跑跳的样子。",
+      "status": "active"
+    },
+    {
+      "id": "item-37",
+      "name": "浅蓝色卡通遮阳帽",
+      "type": "帽子",
+      "color": "浅蓝",
+      "pattern": "卡通",
+      "size_stage": "80",
+      "wear_count": 1,
+      "first_worn_at": "2025-02-01",
+      "last_worn_at": "2025-02-01",
+      "rep_image_url": "/demo-product-pic/20260720-085831.jpeg",
+      "product_image_url": "/demo-product-pic/20260720-085831.jpeg",
+      "story": "浅蓝色的遮阳帽，等着下一个大太阳的日子。",
+      "status": "active"
     }
   ],
   "reminders": [
@@ -864,6 +964,11 @@ export const PRESET_RESULT: ScanResult = {
       "date": "2024-02-29",
       "label": "第一次穿 90 码",
       "size_stage": "90"
+    },
+    {
+      "date": "2026-03-31",
+      "label": "第一次穿 100 码",
+      "size_stage": "100"
     }
   ],
   "currentSize": "宝宝当前40个月，已经超出标准尺码表范围，但根据穿着记录，90码衣物仍在使用中，建议考虑购买更大尺码（如100码）的衣物"

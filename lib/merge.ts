@@ -84,7 +84,10 @@ export function sizeForMonths(months: number): string {
 
 function sizeBucket(size: string): number {
   const i = SIZE_ORDER.indexOf(size);
-  return i === -1 ? 3 : i + 1; // 52→1 … 90→6
+  if (i !== -1) return i + 1; // 52→1 … 90→6
+  const n = parseInt(size, 10);
+  if (Number.isFinite(n) && n >= 100) return SIZE_ORDER.length + 1; // 100+ 码：当前及未来档
+  return 3;
 }
 
 function statusOf(bucket: number, currentBucket: number, wearCount: number): ClothingStatus {
@@ -186,7 +189,7 @@ export function buildMilestones(items: ClothingItem[]): Milestone[] {
     if (!cur || it.first_worn_at < cur.first_worn_at) earliest.set(it.size_stage, it);
   }
   return [...earliest.entries()]
-    .sort((a, b) => SIZE_ORDER.indexOf(a[0]) - SIZE_ORDER.indexOf(b[0]))
+    .sort((a, b) => (parseInt(a[0], 10) || 0) - (parseInt(b[0], 10) || 0)) // 数字升序，兼容 100+ 码
     .map(([size, it]) => ({
       date: it.first_worn_at,
       label:
