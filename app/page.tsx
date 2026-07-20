@@ -41,7 +41,8 @@ export default function Home() {
         <div className="mx-auto w-20 h-20 rounded-3xl bg-gradient-to-br from-macaron-pink-soft to-macaron-blue-soft border border-white flex items-center justify-center text-4xl shadow-inner">
           📦
         </div>
-        <p className="text-sm text-ink-soft mt-3 leading-relaxed px-4">
+        <h1 className="font-display text-3xl mt-3 text-ink">简居</h1>
+        <p className="text-sm text-ink-soft mt-2 leading-relaxed px-4">
           拖延症克星：AI 管家帮你把全屋物品理清楚
         </p>
       </section>
@@ -70,22 +71,22 @@ export default function Home() {
         </div>
       </Link>
 
-      {/* 规划中模块 */}
-      <section className="grid grid-cols-2 gap-3">
+      {/* 规划中模块（视觉减重，突出主 Demo） */}
+      <section className="grid grid-cols-2 gap-3 opacity-80">
         {MODULES.map((m) => (
           <Link
             key={m.href}
             href={m.href}
-            className="card-dream rounded-3xl p-4 hover:scale-[1.02] active:scale-[0.98] transition-transform"
+            className="card-dream rounded-3xl p-3.5 hover:scale-[1.02] active:scale-[0.98] transition-transform"
           >
             <div className="flex items-center justify-between">
-              <span className="text-2xl">{m.icon}</span>
+              <span className="text-xl">{m.icon}</span>
               <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-butter-soft text-[#b08a2e]">
                 Coming 2026
               </span>
             </div>
-            <p className="font-medium text-ink text-sm mt-2">{m.title}</p>
-            <p className="text-[11px] text-ink-soft mt-0.5 leading-snug">{m.desc}</p>
+            <p className="font-medium text-ink text-[13px] mt-1.5">{m.title}</p>
+            <p className="text-[10px] text-ink-soft mt-0.5 leading-snug">{m.desc}</p>
           </Link>
         ))}
       </section>

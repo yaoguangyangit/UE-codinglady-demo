@@ -185,7 +185,7 @@ export default function Home() {
       {/* 模块标题 */}
       <section className="text-center pt-2">
         <p className="text-[10px] tracking-[0.2em] text-ink-soft/70">
-          AI搬家 · 已上线模块
+          简居 · 已上线模块
         </p>
         <h1 className="font-display text-2xl text-ink mt-1">🍼 宝宝衣橱</h1>
       </section>
