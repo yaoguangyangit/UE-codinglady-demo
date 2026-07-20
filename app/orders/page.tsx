@@ -44,22 +44,25 @@ export default function OrdersPage() {
         </p>
       </section>
 
-      {/* 三步流程（参考 Lookie 授权流程的轻松感） */}
-      <section className="space-y-2.5">
-        {STEPS.map((s, i) => (
-          <div key={s.title} className="card-dream rounded-3xl p-4 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-macaron-blue-soft to-macaron-pink-soft flex items-center justify-center text-xl shrink-0">
-              {s.icon}
+      {/* 三步流程（整合为一张卡片，与绑定入口区分） */}
+      <section className="card-dream rounded-3xl p-4">
+        <p className="text-[11px] text-ink-soft mb-3">📦 三步完成，不用手选</p>
+        <div className="space-y-3">
+          {STEPS.map((s, i) => (
+            <div key={s.title} className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-macaron-blue-soft to-macaron-pink-soft flex items-center justify-center text-base shrink-0">
+                {s.icon}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-ink">
+                  <span className="text-macaron-pink-deep font-display mr-1">{i + 1}</span>
+                  {s.title}
+                </p>
+                <p className="text-[10px] text-ink-soft mt-0.5">{s.desc}</p>
+              </div>
             </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-ink">
-                <span className="text-macaron-pink-deep font-display mr-1">{i + 1}</span>
-                {s.title}
-              </p>
-              <p className="text-[11px] text-ink-soft mt-0.5">{s.desc}</p>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </section>
 
       {/* 绑定入口 */}

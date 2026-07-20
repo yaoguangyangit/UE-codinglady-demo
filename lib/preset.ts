@@ -15,7 +15,8 @@ export const PRESET_RESULT: ScanResult = {
       "item_ids": [
         "item-1"
       ],
-      "season_hint": "夏"
+      "season_hint": "夏",
+      "caption": "看动画"
     },
     {
       "id": "photo-2",
@@ -25,7 +26,8 @@ export const PRESET_RESULT: ScanResult = {
         "item-2",
         "item-3"
       ],
-      "season_hint": "夏"
+      "season_hint": "夏",
+      "caption": "爬楼梯"
     },
     {
       "id": "photo-3",
@@ -35,7 +37,8 @@ export const PRESET_RESULT: ScanResult = {
         "item-4",
         "item-5"
       ],
-      "season_hint": "夏"
+      "season_hint": "夏",
+      "caption": "量身高"
     },
     {
       "id": "photo-4",
@@ -45,7 +48,8 @@ export const PRESET_RESULT: ScanResult = {
         "item-6",
         "item-7"
       ],
-      "season_hint": "夏"
+      "season_hint": "夏",
+      "caption": "游乐场"
     },
     {
       "id": "photo-5",
@@ -57,7 +61,8 @@ export const PRESET_RESULT: ScanResult = {
         "item-9",
         "item-10"
       ],
-      "season_hint": "夏"
+      "season_hint": "夏",
+      "caption": "拍艺术照"
     },
     {
       "id": "photo-6",
@@ -67,17 +72,19 @@ export const PRESET_RESULT: ScanResult = {
         "item-11",
         "item-34"
       ],
-      "season_hint": "夏"
+      "season_hint": "夏",
+      "caption": "拍艺术照"
     },
     {
       "id": "photo-7",
       "image_url": "/preset-photos/20260719-160311.jpeg",
-      "taken_at": "2024-08-09",
+      "taken_at": "2023-08-01",
       "item_ids": [
         "item-12",
         "item-32"
       ],
-      "season_hint": "夏"
+      "season_hint": "夏",
+      "caption": "奶奶的手作"
     },
     {
       "id": "photo-8",
@@ -87,7 +94,8 @@ export const PRESET_RESULT: ScanResult = {
         "item-13",
         "item-14"
       ],
-      "season_hint": "秋"
+      "season_hint": "秋",
+      "caption": "量身高"
     },
     {
       "id": "photo-9",
@@ -96,7 +104,8 @@ export const PRESET_RESULT: ScanResult = {
       "item_ids": [
         "item-15"
       ],
-      "season_hint": "春"
+      "season_hint": "春",
+      "caption": "拍艺术照"
     },
     {
       "id": "photo-10",
@@ -107,7 +116,8 @@ export const PRESET_RESULT: ScanResult = {
         "item-17",
         "item-18"
       ],
-      "season_hint": "春"
+      "season_hint": "春",
+      "caption": "室内玩耍"
     },
     {
       "id": "photo-11",
@@ -117,7 +127,8 @@ export const PRESET_RESULT: ScanResult = {
         "item-19",
         "item-20"
       ],
-      "season_hint": "秋季"
+      "season_hint": "秋季",
+      "caption": "玩乐高"
     },
     {
       "id": "photo-12",
@@ -127,7 +138,8 @@ export const PRESET_RESULT: ScanResult = {
         "item-21",
         "item-7"
       ],
-      "season_hint": "秋"
+      "season_hint": "秋",
+      "caption": "玩乐高"
     },
     {
       "id": "photo-13",
@@ -137,7 +149,8 @@ export const PRESET_RESULT: ScanResult = {
         "item-22",
         "item-23"
       ],
-      "season_hint": "春/夏"
+      "season_hint": "春/夏",
+      "caption": "拍艺术照"
     },
     {
       "id": "photo-14",
@@ -146,7 +159,8 @@ export const PRESET_RESULT: ScanResult = {
       "item_ids": [
         "item-24"
       ],
-      "season_hint": "夏"
+      "season_hint": "夏",
+      "caption": "玩乐高"
     },
     {
       "id": "photo-15",
@@ -156,7 +170,8 @@ export const PRESET_RESULT: ScanResult = {
         "item-24",
         "item-20"
       ],
-      "season_hint": "夏"
+      "season_hint": "夏",
+      "caption": "玩乐高"
     },
     {
       "id": "photo-16",
@@ -166,7 +181,8 @@ export const PRESET_RESULT: ScanResult = {
         "item-26",
         "item-27"
       ],
-      "season_hint": "秋"
+      "season_hint": "秋",
+      "caption": "玩乐高"
     },
     {
       "id": "photo-17",
@@ -177,7 +193,8 @@ export const PRESET_RESULT: ScanResult = {
         "item-29",
         "item-10"
       ],
-      "season_hint": "春"
+      "season_hint": "春",
+      "caption": "户外露营"
     },
     {
       "id": "photo-18",
@@ -187,7 +204,8 @@ export const PRESET_RESULT: ScanResult = {
         "item-21",
         "item-8"
       ],
-      "season_hint": "夏"
+      "season_hint": "夏",
+      "caption": "室内玩耍"
     },
     {
       "id": "photo-19",
@@ -197,7 +215,8 @@ export const PRESET_RESULT: ScanResult = {
         "item-30",
         "item-31"
       ],
-      "season_hint": "夏"
+      "season_hint": "夏",
+      "caption": "玩乐高"
     },
     {
       "id": "photo-20",
@@ -206,7 +225,8 @@ export const PRESET_RESULT: ScanResult = {
       "item_ids": [
         "item-26"
       ],
-      "season_hint": "春"
+      "season_hint": "春",
+      "caption": "户外露营"
     },
     {
       "id": "photo-21",
@@ -215,7 +235,8 @@ export const PRESET_RESULT: ScanResult = {
       "item_ids": [
         "item-33"
       ],
-      "season_hint": "夏"
+      "season_hint": "夏",
+      "caption": "户外露营"
     },
     {
       "id": "photo-22",
@@ -224,7 +245,8 @@ export const PRESET_RESULT: ScanResult = {
       "item_ids": [
         "item-35"
       ],
-      "season_hint": "春"
+      "season_hint": "春",
+      "caption": "生日照"
     }
   ],
   "items": [
@@ -443,10 +465,10 @@ export const PRESET_RESULT: ScanResult = {
       "type": "连体衣",
       "color": "白色",
       "pattern": "条纹",
-      "size_stage": "90",
+      "size_stage": "66",
       "wear_count": 1,
-      "first_worn_at": "2024-08-09",
-      "last_worn_at": "2024-08-09",
+      "first_worn_at": "2023-08-01",
+      "last_worn_at": "2023-08-01",
       "rep_image_url": "/preset-photos/20260719-160311.jpeg",
       "status": "idle",
       "story": "2024年8月9日唯一一次穿着，还没来得及出门，就成为了珍贵的回忆。",
@@ -685,8 +707,8 @@ export const PRESET_RESULT: ScanResult = {
       "pattern": "条纹",
       "size_stage": "59",
       "wear_count": 1,
-      "first_worn_at": "2024-08-09",
-      "last_worn_at": "2024-08-09",
+      "first_worn_at": "2023-08-01",
+      "last_worn_at": "2023-08-01",
       "rep_image_url": "/preset-photos/20260719-160311.jpeg",
       "product_image_url": "/demo-product-pic/ai-item-32.jpg",
       "story": "奶奶亲手钩的它，橘色小包包装过出门的每一样小零碎。",

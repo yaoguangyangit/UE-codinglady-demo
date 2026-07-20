@@ -161,20 +161,26 @@ function GapUploadModal({
 
 // ---------- 衣物详情弹层 ----------
 function ItemModal({
-  item,
+  items,
   photos,
   monthAge,
-  imageUrl,
+  viewMode,
+  initialItemId,
+  entryPhotoId,
   onClose,
   onStory,
 }: {
-  item: ClothingItem;
+  items: ClothingItem[];
   photos: PhotoItem[];
   monthAge: number;
-  imageUrl: string;
+  viewMode: "model" | "product";
+  initialItemId: string;
+  entryPhotoId?: string;
   onClose: () => void;
   onStory: (id: string, story: string) => void;
 }) {
+  const [currentId, setCurrentId] = useState(initialItemId);
+  const item = items.find((i) => i.id === currentId) ?? items[0];
   const [story, setStory] = useState(item.story || "");
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
@@ -184,6 +190,18 @@ function ItemModal({
   const [editingSize, setEditingSize] = useState(false);
   const [editingMeta, setEditingMeta] = useState(false);
   const [metaDraft, setMetaDraft] = useState({ type: item.type, color: item.color, pattern: item.pattern });
+  // 「今天更好看 / 添加单品」上传模拟
+  const [uploadMsg, setUploadMsg] = useState("");
+  const uploadRef = useRef<HTMLInputElement>(null);
+
+  // 单品切换时同步故事与编辑草稿
+  useEffect(() => {
+    setStory(item.story || "");
+    setMetaDraft({ type: item.type, color: item.color, pattern: item.pattern });
+    setEditing(false);
+    setEditingSize(false);
+    setEditingMeta(false);
+  }, [currentId, item.story, item.type, item.color, item.pattern]);
 
   // 弹层打开期间锁定背景滚动
   useEffect(() => {
@@ -193,6 +211,19 @@ function ItemModal({
       document.body.style.overflow = prev;
     };
   }, []);
+
+  // 模特图模式：入口照片固定为顶部主图（不随单品切换改变）
+  const entryPhoto = viewMode === "model" ? photos.find((p) => p.id === entryPhotoId) : undefined;
+  const mates = entryPhoto
+    ? entryPhoto.item_ids
+        .map((id) => items.find((i) => i.id === id))
+        .filter((i): i is ClothingItem => Boolean(i))
+    : [];
+  const topImage = entryPhoto
+    ? entryPhoto.image_url
+    : viewMode === "product"
+      ? item.product_image_url || svgProductImage(item)
+      : item.rep_image_url;
 
   const wornPhotos = photos
     .filter((p) => p.item_ids.includes(item.id))
@@ -254,7 +285,7 @@ function ItemModal({
         <div className="flex items-start gap-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={imageUrl}
+            src={topImage}
             alt={item.name}
             className="w-20 h-20 rounded-2xl object-cover border border-[#f4e7d2]"
             onError={(e) => {
@@ -424,36 +455,106 @@ function ItemModal({
           )}
         </div>
 
-        {/* 穿着记录 */}
-        <div className="mt-4">
-          <p className="text-[11px] text-ink-soft mb-2">
-            📅 穿着记录 · 共 {item.wear_count} 次（{shortDate(item.first_worn_at)} →{" "}
-            {shortDate(item.last_worn_at)}）
-          </p>
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {wornPhotos.map((p) => (
-              <div key={p.id} className="shrink-0 text-center">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={p.image_url}
-                  alt={p.taken_at}
-                  title="点击设为封面图"
-                  onClick={() => setItemDetail(item.id, { rep_image_url: p.image_url })}
-                  className={`w-16 h-16 rounded-xl object-cover border cursor-pointer active:scale-95 transition ${
-                    p.image_url === item.rep_image_url
-                      ? "border-macaron-pink ring-2 ring-macaron-pink"
-                      : "border-[#f4e7d2]"
+        {/* 底部：模特图模式=我的单品 / 服饰图模式=穿着记录 */}
+        {entryPhoto ? (
+          <div className="mt-4">
+            <p className="text-[11px] text-ink-soft mb-2">
+              👕 我的单品 · 这张照片里的 {mates.length} 件
+            </p>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {mates.map((it) => (
+                <button
+                  key={it.id}
+                  type="button"
+                  onClick={() => setCurrentId(it.id)}
+                  className={`shrink-0 text-center rounded-xl p-1 transition ${
+                    it.id === currentId ? "bg-macaron-pink-soft ring-1 ring-macaron-pink" : ""
                   }`}
-                  onError={(e) => {
-                    const el = e.currentTarget;
-                    if (!el.src.startsWith("data:")) el.src = svgPhotoPlaceholder(p.taken_at);
-                  }}
-                />
-                <p className="text-[9px] text-ink-soft mt-0.5">{shortDate(p.taken_at)}</p>
-              </div>
-            ))}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={it.product_image_url || svgProductImage(it)}
+                    alt={it.name}
+                    className="w-16 h-16 rounded-xl object-cover border border-[#f4e7d2]"
+                    onError={(e) => {
+                      const el = e.currentTarget;
+                      if (!el.src.startsWith("data:")) el.src = svgProductImage(it);
+                    }}
+                  />
+                  <p className="text-[9px] text-ink-soft mt-0.5 w-16 truncate">{it.name}</p>
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => uploadRef.current?.click()}
+                className="shrink-0 w-16 h-16 self-center rounded-xl border border-dashed border-macaron-pink text-macaron-pink-deep text-[10px] leading-tight active:scale-95 transition"
+              >
+                ＋<br />添加单品
+              </button>
+            </div>
+            <p className="text-[9px] text-ink-soft/70 mt-1">
+              点单品切换详情 · 添加单品：补充 AI 没识别出来的
+            </p>
           </div>
-        </div>
+        ) : (
+          <div className="mt-4">
+            <p className="text-[11px] text-ink-soft mb-2">
+              📅 穿着记录 · 共 {item.wear_count} 次（{shortDate(item.first_worn_at)} →{" "}
+              {shortDate(item.last_worn_at)}）
+            </p>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {wornPhotos.map((p) => (
+                <div key={p.id} className="shrink-0 text-center">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={p.image_url}
+                    alt={p.taken_at}
+                    title="点击设为封面图"
+                    onClick={() => setItemDetail(item.id, { rep_image_url: p.image_url })}
+                    className={`w-16 h-16 rounded-xl object-cover border cursor-pointer active:scale-95 transition ${
+                      p.image_url === item.rep_image_url
+                        ? "border-macaron-pink ring-2 ring-macaron-pink"
+                        : "border-[#f4e7d2]"
+                    }`}
+                    onError={(e) => {
+                      const el = e.currentTarget;
+                      if (!el.src.startsWith("data:")) el.src = svgPhotoPlaceholder(p.taken_at);
+                    }}
+                  />
+                  <p className="text-[9px] text-ink-soft mt-0.5 w-16 truncate">
+                    {p.caption || shortDate(p.taken_at)}
+                  </p>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => uploadRef.current?.click()}
+                className="shrink-0 w-16 h-16 self-center rounded-xl border border-dashed border-macaron-blue text-macaron-blue-deep text-[10px] leading-tight active:scale-95 transition"
+              >
+                📷
+                <br />
+                今天更好看
+              </button>
+            </div>
+            <p className="text-[9px] text-ink-soft/70 mt-1">
+              点照片可设为封面 · 今天更好看：给它补一张新照片
+            </p>
+          </div>
+        )}
+        {uploadMsg && (
+          <p className="text-[10px] text-[#4e9b74] mt-2">✓ {uploadMsg}</p>
+        )}
+        <input
+          ref={uploadRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) setUploadMsg(`已收到「${f.name}」，AI 会把它补进衣橱（演示）`);
+            e.target.value = "";
+          }}
+        />
       </div>
     </div>,
     document.body
@@ -800,13 +901,21 @@ function WardrobeInner() {
         </section>
       )}
 
-      {/* 衣物详情弹层 */}
+      {/* 衣物详情弹层（双模式：服饰图进详情 / 模特图进详情） */}
       {selected && (
         <ItemModal
-          item={items.find((it) => it.id === selected.id) || selected}
+          items={items}
           photos={photos}
           monthAge={monthAge}
-          imageUrl={imageOf(selected)}
+          viewMode={viewMode}
+          initialItemId={selected.id}
+          entryPhotoId={
+            photos.find(
+              (p) =>
+                p.image_url ===
+                (items.find((it) => it.id === selected.id) || selected).rep_image_url
+            )?.id
+          }
           onClose={() => setSelected(null)}
           onStory={setItemStory}
         />

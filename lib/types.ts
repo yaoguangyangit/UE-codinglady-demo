@@ -30,6 +30,7 @@ export interface PhotoItem {
   taken_at: string; // 拍摄日期 YYYY-MM-DD
   item_ids: string[]; // 分解出的衣物 id 列表
   season_hint: string; // 推测季节
+  caption?: string; // 场景短标题（GLM-4V 概括，如"量身高""生日照"）
   place?: string; // 拍摄地点（元数据有才有，严禁编造）
   people?: string; // 同行人物（同上）
 }
