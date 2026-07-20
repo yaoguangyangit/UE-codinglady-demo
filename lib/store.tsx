@@ -10,7 +10,7 @@ import {
 } from "react";
 import type { ClothingItem, Milestone, PhotoItem, Reminder } from "./types";
 
-const STORAGE_KEY = "baobao_wardrobe_v2";
+const STORAGE_KEY = "baobao_wardrobe_v3";
 
 /** 宝宝档案（首个页面收集：头像/昵称/生日，月龄由生日反推） */
 export interface BabyProfile {

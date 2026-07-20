@@ -570,12 +570,16 @@ function WardrobeInner() {
   const [tab, setTab] = useState<Tab>(
     ["closet", "timeline", "reminders"].includes(initialTab) ? initialTab : "closet"
   );
+  const initialView = searchParams.get("view") as "model" | "product" | null;
   const [selected, setSelected] = useState<ClothingItem | null>(null);
+  const [selectedPhoto, setSelectedPhoto] = useState<PhotoItem | null>(null); // 模特图照片墙点击的照片
   const [showAllIdle, setShowAllIdle] = useState(false);
   const [gapLabel, setGapLabel] = useState<string | null>(null); // 「可增补」补录弹层
   // 衣橱图片模式：默认服饰图（商品图每件唯一，避免同一张生活照在多件卡片重复）；
   // model=宝宝穿着原图（模特图）/ product=商品图
-  const [viewMode, setViewMode] = useState<"model" | "product">("product");
+  const [viewMode, setViewMode] = useState<"model" | "product">(
+    initialView === "model" ? "model" : "product"
+  );
 
   if (!ready) {
     return <div className="py-20 text-center text-ink-soft">加载中…</div>;
@@ -646,16 +650,12 @@ function WardrobeInner() {
               从 {photos.length} 张照片里长出 {items.length} 件衣物 · 零次手动录入
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              reset();
-              router.push("/");
-            }}
+          <Link
+            href="/closet"
             className="text-[10px] text-ink-soft underline underline-offset-2 shrink-0"
           >
-            重扫
-          </button>
+            统计
+          </Link>
         </div>
         {/* 收录统计：一眼看出哪类需要增补或汰换（可增补可点击补录） */}
         <div className="mt-3 pt-3 border-t border-[#f7ecd9] space-y-1.5">
@@ -676,7 +676,7 @@ function WardrobeInner() {
 
       {/* Tab 切换（底部固定 tab bar，小程序式） */}
 
-      {/* ① 衣橱总览 */}
+      {/* ① 衣橱总览：服饰图=衣物卡 / 模特图=照片墙（每张照片一张，不重复） */}
       {tab === "closet" && (
         <section className="space-y-3">
           {/* 服饰图 ⇄ 模特图：并列分段控件，当前高亮、未选置灰（默认服饰图） */}
@@ -706,47 +706,97 @@ function WardrobeInner() {
               </button>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            {items.map((it, idx) => (
-              <button
-                key={it.id}
-                type="button"
-                onClick={() => setSelected(it)}
-                className="card-dream rounded-3xl overflow-hidden text-left animate-pop-in hover:scale-[1.02] transition-transform"
-                style={{ animationDelay: `${Math.min(idx * 60, 400)}ms` }}
-              >
-                <div className="relative">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={imageOf(it)}
-                    alt={it.name}
-                    className="w-full aspect-square object-cover"
-                    onError={(e) => {
-                      const el = e.currentTarget;
-                      if (!el.src.startsWith("data:")) el.src = svgProductImage(it);
+          {viewMode === "product" ? (
+            <div className="grid grid-cols-2 gap-3">
+              {items.map((it, idx) => (
+                <button
+                  key={it.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedPhoto(null);
+                    setSelected(it);
+                  }}
+                  className="card-dream rounded-3xl overflow-hidden text-left animate-pop-in hover:scale-[1.02] transition-transform"
+                  style={{ animationDelay: `${Math.min(idx * 60, 400)}ms` }}
+                >
+                  <div className="relative">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={imageOf(it)}
+                      alt={it.name}
+                      className="w-full aspect-square object-cover"
+                      onError={(e) => {
+                        const el = e.currentTarget;
+                        if (!el.src.startsWith("data:")) el.src = svgProductImage(it);
+                      }}
+                    />
+                    <span
+                      className={`absolute top-2 left-2 text-[10px] px-2 py-0.5 rounded-full ${sizeBadgeCls(it.size_stage)} bg-opacity-95`}
+                    >
+                      {it.size_stage} 码
+                    </span>
+                    <span
+                      className={`absolute top-2 right-2 text-[10px] px-2 py-0.5 rounded-full ${STATUS_META[it.status].cls} bg-opacity-95`}
+                    >
+                      {STATUS_META[it.status].label}
+                    </span>
+                  </div>
+                  <div className="p-3">
+                    <p className="text-sm font-medium text-ink truncate">{it.name}</p>
+                    <p className="text-[11px] text-ink-soft mt-0.5">
+                      穿过 {it.wear_count} 次 · {shortDate(it.first_worn_at)} →{" "}
+                      {shortDate(it.last_worn_at)}
+                    </p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {[...photos]
+                .sort((a, b) => b.taken_at.localeCompare(a.taken_at))
+                .map((p, idx) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedPhoto(p);
+                      setSelected(items.find((it) => it.id === p.item_ids[0]) ?? items[0]);
                     }}
-                  />
-                  <span
-                    className={`absolute top-2 left-2 text-[10px] px-2 py-0.5 rounded-full ${sizeBadgeCls(it.size_stage)} bg-opacity-95`}
+                    className="card-dream rounded-3xl overflow-hidden text-left animate-pop-in hover:scale-[1.02] transition-transform"
+                    style={{ animationDelay: `${Math.min(idx * 60, 400)}ms` }}
                   >
-                    {it.size_stage} 码
-                  </span>
-                  <span
-                    className={`absolute top-2 right-2 text-[10px] px-2 py-0.5 rounded-full ${STATUS_META[it.status].cls} bg-opacity-95`}
-                  >
-                    {STATUS_META[it.status].label}
-                  </span>
-                </div>
-                <div className="p-3">
-                  <p className="text-sm font-medium text-ink truncate">{it.name}</p>
-                  <p className="text-[11px] text-ink-soft mt-0.5">
-                    穿过 {it.wear_count} 次 · {shortDate(it.first_worn_at)} →{" "}
-                    {shortDate(it.last_worn_at)}
-                  </p>
-                </div>
-              </button>
-            ))}
-          </div>
+                    <div className="relative">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={p.image_url}
+                        alt={p.caption || p.taken_at}
+                        className="w-full aspect-square object-cover"
+                        onError={(e) => {
+                          const el = e.currentTarget;
+                          if (!el.src.startsWith("data:")) el.src = svgPhotoPlaceholder(p.taken_at);
+                        }}
+                      />
+                      <span className="absolute top-2 left-2 text-[10px] px-2 py-0.5 rounded-full bg-card/90 text-ink">
+                        {p.taken_at.slice(0, 4)}
+                      </span>
+                      <span className="absolute top-2 right-2 text-[10px] px-2 py-0.5 rounded-full bg-macaron-blue-soft/95 text-macaron-blue-deep">
+                        {p.season_hint || "·"}
+                      </span>
+                    </div>
+                    <div className="p-3">
+                      <p className="text-sm font-medium text-ink truncate">
+                        {p.caption || "一张宝宝照"}
+                      </p>
+                      <p className="text-[11px] text-ink-soft mt-0.5 truncate">
+                        📍{p.place ? `${p.place} · ` : ""}
+                        {p.taken_at}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+            </div>
+          )}
         </section>
       )}
 
@@ -795,7 +845,10 @@ function WardrobeInner() {
                           <button
                             key={it.id}
                             type="button"
-                            onClick={() => setSelected(it)}
+                            onClick={() => {
+                              setSelectedPhoto(p);
+                              setSelected(it);
+                            }}
                             className="text-[10px] px-2 py-0.5 rounded-full bg-macaron-blue-soft text-macaron-blue-deep"
                           >
                             {it.name} · {it.size_stage}码
@@ -910,6 +963,7 @@ function WardrobeInner() {
           viewMode={viewMode}
           initialItemId={selected.id}
           entryPhotoId={
+            selectedPhoto?.id ??
             photos.find(
               (p) =>
                 p.image_url ===
@@ -931,6 +985,15 @@ function WardrobeInner() {
           if (k !== "me") setTab(k);
         }}
       />
+
+      {/* 悬浮加号：随时手动补录 */}
+      <Link
+        href="/"
+        className="fixed right-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-40 w-12 h-12 rounded-full bg-macaron-pink/80 text-white shadow-lg backdrop-blur-sm flex items-center justify-center text-2xl hover:scale-110 active:scale-95 transition"
+        aria-label="手动加入衣橱"
+      >
+        ＋
+      </Link>
     </div>
   );
 }

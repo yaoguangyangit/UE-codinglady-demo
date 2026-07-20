@@ -16,7 +16,8 @@ export const PRESET_RESULT: ScanResult = {
         "item-1"
       ],
       "season_hint": "夏",
-      "caption": "看动画"
+      "caption": "宝宝玩平板",
+      "place": "杭州少年宫"
     },
     {
       "id": "photo-2",
@@ -27,7 +28,8 @@ export const PRESET_RESULT: ScanResult = {
         "item-3"
       ],
       "season_hint": "夏",
-      "caption": "爬楼梯"
+      "caption": "第一次爬楼梯",
+      "place": "幼儿园"
     },
     {
       "id": "photo-3",
@@ -38,7 +40,8 @@ export const PRESET_RESULT: ScanResult = {
         "item-5"
       ],
       "season_hint": "夏",
-      "caption": "量身高"
+      "caption": "社区医院量身高",
+      "place": "社区医院"
     },
     {
       "id": "photo-4",
@@ -49,7 +52,8 @@ export const PRESET_RESULT: ScanResult = {
         "item-7"
       ],
       "season_hint": "夏",
-      "caption": "游乐场"
+      "caption": "医院候诊",
+      "place": "杭州植物园"
     },
     {
       "id": "photo-5",
@@ -62,7 +66,8 @@ export const PRESET_RESULT: ScanResult = {
         "item-10"
       ],
       "season_hint": "夏",
-      "caption": "拍艺术照"
+      "caption": "第一次背书包",
+      "place": "商场"
     },
     {
       "id": "photo-6",
@@ -73,7 +78,8 @@ export const PRESET_RESULT: ScanResult = {
         "item-34"
       ],
       "season_hint": "夏",
-      "caption": "拍艺术照"
+      "caption": "拍周岁艺术照",
+      "place": "杭州照相馆"
     },
     {
       "id": "photo-7",
@@ -84,7 +90,8 @@ export const PRESET_RESULT: ScanResult = {
         "item-32"
       ],
       "season_hint": "夏",
-      "caption": "奶奶的手作"
+      "caption": "奶奶的手作",
+      "place": "家"
     },
     {
       "id": "photo-8",
@@ -95,7 +102,8 @@ export const PRESET_RESULT: ScanResult = {
         "item-14"
       ],
       "season_hint": "秋",
-      "caption": "量身高"
+      "caption": "客厅玩乐高",
+      "place": "湘湖"
     },
     {
       "id": "photo-9",
@@ -105,7 +113,8 @@ export const PRESET_RESULT: ScanResult = {
         "item-15"
       ],
       "season_hint": "春",
-      "caption": "拍艺术照"
+      "caption": "室内玩耍",
+      "place": "九溪烟树"
     },
     {
       "id": "photo-10",
@@ -117,7 +126,8 @@ export const PRESET_RESULT: ScanResult = {
         "item-18"
       ],
       "season_hint": "春",
-      "caption": "室内玩耍"
+      "caption": "客厅玩乐高",
+      "place": "西溪蝶园"
     },
     {
       "id": "photo-11",
@@ -128,7 +138,8 @@ export const PRESET_RESULT: ScanResult = {
         "item-20"
       ],
       "season_hint": "秋季",
-      "caption": "玩乐高"
+      "caption": "客厅玩乐高",
+      "place": "良渚文化村"
     },
     {
       "id": "photo-12",
@@ -139,7 +150,8 @@ export const PRESET_RESULT: ScanResult = {
         "item-7"
       ],
       "season_hint": "秋",
-      "caption": "玩乐高"
+      "caption": "客厅玩乐高",
+      "place": "湖滨银泰"
     },
     {
       "id": "photo-13",
@@ -150,7 +162,8 @@ export const PRESET_RESULT: ScanResult = {
         "item-23"
       ],
       "season_hint": "春/夏",
-      "caption": "拍艺术照"
+      "caption": "宝宝芭蕾舞练习",
+      "place": "钱塘江边"
     },
     {
       "id": "photo-14",
@@ -160,7 +173,8 @@ export const PRESET_RESULT: ScanResult = {
         "item-24"
       ],
       "season_hint": "夏",
-      "caption": "玩乐高"
+      "caption": "客厅玩乐高",
+      "place": "拱宸桥"
     },
     {
       "id": "photo-15",
@@ -171,7 +185,8 @@ export const PRESET_RESULT: ScanResult = {
         "item-20"
       ],
       "season_hint": "夏",
-      "caption": "玩乐高"
+      "caption": "宝宝骑狗雕像",
+      "place": "杭州少儿公园"
     },
     {
       "id": "photo-16",
@@ -182,7 +197,8 @@ export const PRESET_RESULT: ScanResult = {
         "item-27"
       ],
       "season_hint": "秋",
-      "caption": "玩乐高"
+      "caption": "客厅玩乐高",
+      "place": "西溪湿地"
     },
     {
       "id": "photo-17",
@@ -194,7 +210,8 @@ export const PRESET_RESULT: ScanResult = {
         "item-10"
       ],
       "season_hint": "春",
-      "caption": "户外露营"
+      "caption": "户外玩耍",
+      "place": "杭州市动物园"
     },
     {
       "id": "photo-18",
@@ -205,7 +222,8 @@ export const PRESET_RESULT: ScanResult = {
         "item-8"
       ],
       "season_hint": "夏",
-      "caption": "室内玩耍"
+      "caption": "客厅玩乐高",
+      "place": "杭州少年宫"
     },
     {
       "id": "photo-19",
@@ -216,7 +234,8 @@ export const PRESET_RESULT: ScanResult = {
         "item-31"
       ],
       "season_hint": "夏",
-      "caption": "玩乐高"
+      "caption": "客厅玩乐高",
+      "place": "杭州植物园"
     },
     {
       "id": "photo-20",
@@ -226,7 +245,8 @@ export const PRESET_RESULT: ScanResult = {
         "item-26"
       ],
       "season_hint": "春",
-      "caption": "户外露营"
+      "caption": "户外赏花",
+      "place": "西湖"
     },
     {
       "id": "photo-21",
@@ -236,7 +256,8 @@ export const PRESET_RESULT: ScanResult = {
         "item-33"
       ],
       "season_hint": "夏",
-      "caption": "户外露营"
+      "caption": "户外露营",
+      "place": "西溪湿地露营地"
     },
     {
       "id": "photo-22",
@@ -246,7 +267,8 @@ export const PRESET_RESULT: ScanResult = {
         "item-35"
       ],
       "season_hint": "春",
-      "caption": "生日照"
+      "caption": "生日庆祝",
+      "place": "餐厅"
     }
   ],
   "items": [

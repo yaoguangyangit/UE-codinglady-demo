@@ -1,11 +1,13 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useStore, monthsSince, type BabyProfile } from "@/lib/store";
+import { useStore, monthsSince, type BabyProfile, type ScanResult } from "@/lib/store";
 import { PRESET_RESULT } from "@/lib/preset";
 import BottomTab from "@/components/BottomTab";
+import type { ClothingItem, DecomposeResponse, PhotoItem } from "@/lib/types";
 
 const MAX_PHOTOS = 20;
 
@@ -141,9 +143,19 @@ function ProfileForm({ onDone }: { onDone: (p: BabyProfile) => void }) {
 // ---------- 第二屏：相册授权（核心入口） ----------
 export default function Home() {
   const router = useRouter();
-  const { startScan, ready, profile, setProfile, reset, setResult } = useStore();
+  const { ready, profile, setProfile, reset, setResult, result } = useStore();
   const [reading, setReading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // 手动加入衣橱
+  const manualRef = useRef<HTMLInputElement>(null);
+  const [manualLoading, setManualLoading] = useState(false);
+  const [manualPhoto, setManualPhoto] = useState<PhotoItem | null>(null);
+  const [manualItem, setManualItem] = useState<ClothingItem | null>(null);
+
+  // createPortal 需要挂载后才使用，避免 SSR 时 document 不存在
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   if (!ready) {
     return <div className="py-20 text-center text-ink-soft">加载中…</div>;
@@ -158,18 +170,9 @@ export default function Home() {
     if (!list || list.length === 0) return;
     setReading(true);
     try {
-      const files = Array.from(list)
-        .filter((f) => f.type.startsWith("image/"))
-        .slice(0, MAX_PHOTOS);
-      const images: string[] = [];
-      const takenAts: string[] = [];
-      for (const f of files) {
-        images.push(await fileToDataUrl(f));
-        takenAts.push(toYMD(f.lastModified));
-      }
-      if (!images.length) return;
-      startScan(monthAge, images, takenAts);
-      router.push("/processing");
+      // Demo 稳定性：真实相册授权也走提前跑好的预制结果
+      setResult(PRESET_RESULT);
+      router.push("/wardrobe");
     } finally {
       setReading(false);
       if (fileRef.current) fileRef.current.value = "";
@@ -180,6 +183,69 @@ export default function Home() {
     // 演示数据：直达预制结果页（不经过扫描动画）
     setResult(PRESET_RESULT);
     router.push("/wardrobe");
+  }
+
+  async function handleManualFile(list: FileList | null) {
+    const f = list?.[0];
+    if (!f || !f.type.startsWith("image/")) return;
+    setManualLoading(true);
+    try {
+      const image = await fileToDataUrl(f, 900);
+      const takenAt = toYMD(f.lastModified);
+      const res = await fetch("/api/decompose", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ images: [image], takenAts: [takenAt], monthAge }),
+      });
+      if (!res.ok) throw new Error("识别失败");
+      const data: DecomposeResponse = await res.json();
+      if (!data.items.length) {
+        alert("没有识别到衣物，请换一张更清晰的穿搭照片");
+        return;
+      }
+      // 取分解出的第一件作为可编辑草稿
+      const it = data.items[0];
+      const ph = data.photos[0];
+      setManualPhoto(ph);
+      setManualItem({
+        ...it,
+        // 允许用户在弹窗里继续修改
+        story: it.story || `${profile?.nickname || "宝宝"}的一件${it.color}${it.pattern}${it.type}。`,
+      });
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "识别失败");
+    } finally {
+      setManualLoading(false);
+      if (manualRef.current) manualRef.current.value = "";
+    }
+  }
+
+  function saveManualItem() {
+    if (!manualItem || !manualPhoto) return;
+    const itemId =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `manual-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const item: ClothingItem = { ...manualItem, id: itemId };
+    const photo: PhotoItem = { ...manualPhoto, item_ids: [itemId] };
+    const newResult: ScanResult = result
+      ? {
+          ...result,
+          photos: [...result.photos, photo],
+          items: [...result.items, item],
+        }
+      : {
+          photos: [photo],
+          items: [item],
+          reminders: [],
+          shopping: [],
+          milestones: [],
+          currentSize: item.size_stage,
+        };
+    setResult(newResult);
+    setManualPhoto(null);
+    setManualItem(null);
+    router.push("/wardrobe?view=model");
   }
 
   return (
@@ -215,7 +281,7 @@ export default function Home() {
         type="button"
         disabled={reading}
         onClick={() => fileRef.current?.click()}
-        className="w-full rounded-3xl p-6 text-left bg-gradient-to-br from-macaron-pink to-macaron-pink-deep text-white shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-transform disabled:opacity-60"
+        className="relative w-full rounded-3xl p-6 text-left bg-gradient-to-br from-macaron-pink to-macaron-pink-deep text-white shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-transform disabled:opacity-60"
       >
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center text-3xl">
@@ -231,6 +297,15 @@ export default function Home() {
           </div>
           <span className="text-2xl text-white/90">›</span>
         </div>
+        <span
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDemo();
+          }}
+          className="absolute right-5 bottom-3 text-[10px] text-white/80 underline underline-offset-2 cursor-pointer hover:text-white"
+        >
+          演示数据
+        </span>
       </button>
       <input
         ref={fileRef}
@@ -241,45 +316,42 @@ export default function Home() {
         onChange={(e) => handleFiles(e.target.files)}
       />
 
-      {/* 次要入口：导入电商平台订单 → 流程介绍页 */}
-      <Link
-        href="/orders"
-        className="w-full card-dream rounded-3xl p-4 text-left hover:scale-[1.01] active:scale-[0.99] transition-transform block"
-      >
-        <div className="flex items-center gap-3">
+      {/* 次要入口：手动加入衣橱 / 导入电商平台订单 */}
+      <div className="grid grid-cols-2 gap-3">
+        <button
+          type="button"
+          disabled={manualLoading}
+          onClick={() => manualRef.current?.click()}
+          className="card-dream rounded-3xl p-4 text-left hover:scale-[1.01] active:scale-[0.99] transition-transform disabled:opacity-60"
+        >
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-macaron-blue to-macaron-blue-soft flex items-center justify-center text-xl text-white shadow">
+            ➕
+          </div>
+          <p className="text-sm font-medium text-ink mt-2">手动加入衣橱</p>
+          <p className="text-[11px] text-ink-soft mt-0.5">
+            拍一张穿搭照，AI 识别后补进衣橱
+          </p>
+        </button>
+        <Link
+          href="/orders"
+          className="card-dream rounded-3xl p-4 text-left hover:scale-[1.01] active:scale-[0.99] transition-transform block"
+        >
           <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-butter to-macaron-pink flex items-center justify-center text-xl text-white shadow">
             🛒
           </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-ink">导入电商平台订单</p>
-            <p className="text-[11px] text-ink-soft mt-0.5">
-              阿里系订单主图一键入库，自动补齐衣橱
-            </p>
-          </div>
-          <span className="text-macaron-pink text-xl shrink-0">›</span>
-        </div>
-      </Link>
-
-      {/* 兜底入口：演示数据（保留，弱化呈现） */}
-      <p className="text-center pt-1">
-        <button
-          type="button"
-          onClick={handleDemo}
-          className="text-xs text-macaron-blue-deep underline underline-offset-4"
-        >
-          没有宝宝照片？先用演示数据看看 →
-        </button>
-      </p>
-
-      {/* 用户反馈入口：拾光完整构想（六模块架构页） */}
-      <p className="text-center">
-        <Link
-          href="/modules"
-          className="text-xs text-ink-soft underline underline-offset-4"
-        >
-          💡 你希望拾光的下一个模块是什么？→
+          <p className="text-sm font-medium text-ink mt-2">导入电商平台订单</p>
+          <p className="text-[11px] text-ink-soft mt-0.5">
+            阿里系订单主图一键入库
+          </p>
         </Link>
-      </p>
+      </div>
+      <input
+        ref={manualRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => handleManualFile(e.target.files)}
+      />
 
       <p className="text-center text-[11px] text-ink-soft/70 leading-relaxed pt-2">
         照片仅在本机处理，不会上传真实相册；
@@ -289,6 +361,114 @@ export default function Home() {
 
       {/* 底部 tab bar（与衣橱页一致；微信登录在「我的」里） */}
       <BottomTab active={null} />
+
+      {/* 手动加入衣橱：识别后弹出的简化编辑层 */}
+      {mounted && manualItem && manualPhoto &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-50 bg-[#6b5a4e]/40 backdrop-blur-sm flex items-end sm:items-center justify-center"
+            onClick={() => {
+              setManualItem(null);
+              setManualPhoto(null);
+            }}
+          >
+            <div
+              className="w-full max-w-md bg-card rounded-t-3xl sm:rounded-3xl p-5 max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-start gap-3">
+                <img
+                  src={manualPhoto.image_url}
+                  alt="穿搭照"
+                  className="w-20 h-20 rounded-2xl object-cover bg-cream-deep shrink-0"
+                />
+                <div>
+                  <h3 className="font-display text-lg text-ink">识别到一件衣物</h3>
+                  <p className="text-[11px] text-ink-soft mt-1">
+                    AI 已预填信息，请核对并保存
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-4 space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[11px] text-ink-soft">尺码</label>
+                    <select
+                      value={manualItem.size_stage}
+                      onChange={(e) => setManualItem({ ...manualItem, size_stage: e.target.value })}
+                      className="mt-1 w-full rounded-xl bg-white/80 border border-[#f4e7d2] px-3 py-2 text-sm text-ink outline-none focus:border-macaron-pink"
+                    >
+                      {["52", "59", "66", "73", "80", "90", "100", "110"].map((s) => (
+                        <option key={s} value={s}>{s} 码</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[11px] text-ink-soft">分类</label>
+                    <select
+                      value={manualItem.type}
+                      onChange={(e) => setManualItem({ ...manualItem, type: e.target.value })}
+                      className="mt-1 w-full rounded-xl bg-white/80 border border-[#f4e7d2] px-3 py-2 text-sm text-ink outline-none focus:border-macaron-pink"
+                    >
+                      {["连体衣", "哈衣", "包屁衣", "上衣", "裤子", "外套", "连衣裙", "帽子", "袜子", "鞋子", "配饰"].map((t) => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[11px] text-ink-soft">颜色</label>
+                    <input
+                      value={manualItem.color}
+                      onChange={(e) => setManualItem({ ...manualItem, color: e.target.value })}
+                      className="mt-1 w-full rounded-xl bg-white/80 border border-[#f4e7d2] px-3 py-2 text-sm text-ink outline-none focus:border-macaron-pink"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] text-ink-soft">图案</label>
+                    <input
+                      value={manualItem.pattern}
+                      onChange={(e) => setManualItem({ ...manualItem, pattern: e.target.value })}
+                      className="mt-1 w-full rounded-xl bg-white/80 border border-[#f4e7d2] px-3 py-2 text-sm text-ink outline-none focus:border-macaron-pink"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[11px] text-ink-soft">它的故事</label>
+                  <textarea
+                    value={manualItem.story || ""}
+                    onChange={(e) => setManualItem({ ...manualItem, story: e.target.value })}
+                    rows={3}
+                    className="mt-1 w-full rounded-xl bg-white/80 border border-[#f4e7d2] px-3 py-2 text-sm text-ink outline-none focus:border-macaron-pink resize-none"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-5 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setManualItem(null);
+                    setManualPhoto(null);
+                  }}
+                  className="flex-1 py-3 rounded-full border border-[#f4e7d2] text-ink text-sm"
+                >
+                  取消
+                </button>
+                <button
+                  type="button"
+                  onClick={saveManualItem}
+                  className="flex-1 py-3 rounded-full bg-macaron-pink text-white text-sm font-medium shadow"
+                >
+                  保存到衣橱
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 }
